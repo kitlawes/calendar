@@ -1,0 +1,4 @@
+- Get application window to open
+- Show a visualisation of the days in the current month
+- Allow the user to change which month is visualised
+- Allow the user to change which year is visualised
