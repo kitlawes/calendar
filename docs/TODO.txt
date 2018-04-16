@@ -6,5 +6,5 @@ DONE - Change colour of blank calendar boxes and header calendar boxes
 DONE - Allow text to be entered into calendar boxes
 DONE - Allow text entered into calendar boxes to persist while application is not running
 - Make components stretch and shrink with the application window when it is resized
-- Make blank calendar boxes and header calendar boxes uneditable
+DONE - Make blank calendar boxes and header calendar boxes uneditable
 - Make date number in calendar boxes uneditable

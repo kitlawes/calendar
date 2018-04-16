@@ -60,6 +60,7 @@ public class Calendar extends JFrame {
             jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
             jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
             jTextArea.setBackground(Color.LIGHT_GRAY);
+            jTextArea.setEditable(false);
             add(jTextArea);
         }
 
@@ -135,8 +136,10 @@ public class Calendar extends JFrame {
                     int date = i + j * 7 - offset;
                     if (date >= 1 && date <= lengthOfMonth) {
                         jTextAreas[j][i].setBackground(Color.WHITE);
+                        jTextAreas[j][i].setEditable(true);
                     } else {
                         jTextAreas[j][i].setBackground(Color.GRAY);
+                        jTextAreas[j][i].setEditable(false);
                     }
                 }
             }
