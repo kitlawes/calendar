@@ -56,6 +56,7 @@ public class Calendar extends JFrame {
             jTextArea.setLocation(50 * i, 25);
             jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
             jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
+            jTextArea.setBackground(Color.LIGHT_GRAY);
             add(jTextArea);
         }
 
@@ -67,6 +68,7 @@ public class Calendar extends JFrame {
                 jTextArea.setLocation(50 * i, 50 + 25 * j);
                 jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
                 jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
+                jTextArea.setBackground(Color.WHITE);
                 add(jTextArea);
                 jTextAreas[j][i] = jTextArea;
             }
@@ -86,7 +88,13 @@ public class Calendar extends JFrame {
             for (int i = 0; i < 7; i++) {
                 for (int j = 0; j < 6; j++) {
                     int date = i + j * 7 - offset;
-                    jTextAreas[j][i].setText(date >= 1 && date <= lengthOfMonth ? String.valueOf(date) : "");
+                    if (date >= 1 && date <= lengthOfMonth) {
+                        jTextAreas[j][i].setText(String.valueOf(date));
+                        jTextAreas[j][i].setBackground(Color.WHITE);
+                    } else {
+                        jTextAreas[j][i].setText("");
+                        jTextAreas[j][i].setBackground(Color.GRAY);
+                    }
                 }
             }
         }
