@@ -2,3 +2,7 @@ DONE - Get application window to open
 DONE - Show a visualisation of the days in the current month
 DONE - Allow the user to change which month is visualised
 DONE - Allow the user to change which year is visualised
+- Change colour of blank calendar boxes and header calendar boxes
+- Allow text to be entered into calendar boxes
+- Allow text entered into calendar boxes to persist while application is not running
+- Make components stretch and shrink with the application window when it is resized
