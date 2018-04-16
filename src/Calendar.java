@@ -1,5 +1,6 @@
 import javax.swing.*;
 import java.awt.*;
+import java.io.*;
 import java.time.DayOfWeek;
 import java.time.Month;
 import java.time.YearMonth;
@@ -78,24 +79,41 @@ public class Calendar extends JFrame {
             }
         }
 
-        calendarBoxesContents = new String[21][12][6][7];
-        for (int i = 0; i < 21; i++) {
-            for (int j = 0; j < 12; j++) {
-                YearMonth yearMonth = YearMonth.of(2008 + i, j + 1);
-                int lengthOfMonth = yearMonth.lengthOfMonth();
-                gregorianCalendar = new GregorianCalendar(2008 + i, j, 1);
-                int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
-                for (int k = 0; k < 6; k++) {
-                    for (int l = 0; l < 7; l++) {
-                        int date = l + k * 7 - offset;
-                        if (date >= 1 && date <= lengthOfMonth) {
-                            calendarBoxesContents[i][j][k][l] = String.valueOf(date);
-                        } else {
-                            calendarBoxesContents[i][j][k][l] = "";
+        File file = new File("test.ser");
+        if (file.exists()) {
+
+            try {
+                ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file));
+                calendarBoxesContents = (String[][][][]) objectInputStream.readObject();
+                objectInputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+
+        } else {
+
+            calendarBoxesContents = new String[21][12][6][7];
+            for (int i = 0; i < 21; i++) {
+                for (int j = 0; j < 12; j++) {
+                    YearMonth yearMonth = YearMonth.of(2008 + i, j + 1);
+                    int lengthOfMonth = yearMonth.lengthOfMonth();
+                    gregorianCalendar = new GregorianCalendar(2008 + i, j, 1);
+                    int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
+                    for (int k = 0; k < 6; k++) {
+                        for (int l = 0; l < 7; l++) {
+                            int date = l + k * 7 - offset;
+                            if (date >= 1 && date <= lengthOfMonth) {
+                                calendarBoxesContents[i][j][k][l] = String.valueOf(date);
+                            } else {
+                                calendarBoxesContents[i][j][k][l] = "";
+                            }
                         }
                     }
                 }
             }
+
         }
 
         updateCalendarBoxes();
@@ -128,11 +146,21 @@ public class Calendar extends JFrame {
 
     static void saveCalendarBoxesContents() {
         if (!calendarBoxesContentsLocked) {
+
             for (int i = 0; i < 7; i++) {
                 for (int j = 0; j < 6; j++) {
                     calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i] = jTextAreas[j][i].getText();
                 }
             }
+
+            try {
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream("test.ser"));
+                objectOutputStream.writeObject(calendarBoxesContents);
+                objectOutputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
         }
     }
 
