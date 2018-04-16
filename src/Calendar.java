@@ -7,7 +7,8 @@ import java.util.GregorianCalendar;
 
 public class Calendar extends JFrame {
 
-    static JComboBox jComboBox;
+    static JComboBox monthJComboBox;
+    static JComboBox yearJComboBox;
     static JTextArea[][] jTextAreas;
 
     public static void main(String[] args) {
@@ -19,22 +20,34 @@ public class Calendar extends JFrame {
         setSize(50 * 7 + 17, 200 + 40);
         setLocation(3450, 800);
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-
         setLayout(null);
 
-        jComboBox = new JComboBox();
+        monthJComboBox = new JComboBox();
         for (int i = 0; i < 12; i++) {
-            jComboBox.addItem(Month.of(i + 1));
+            monthJComboBox.addItem(Month.of(i + 1));
         }
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
-        jComboBox.setSelectedIndex(gregorianCalendar.get(GregorianCalendar.MONTH));
+        monthJComboBox.setSelectedIndex(gregorianCalendar.get(GregorianCalendar.MONTH));
         JComboBoxItemListener jComboBoxItemListener = new JComboBoxItemListener();
-        jComboBox.addItemListener(jComboBoxItemListener);
-        jComboBox.setSize(50 * 7 + 1, 25 + 1);
-        jComboBox.setLocation(0, 0);
-        jComboBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
-        jComboBox.setFont(jComboBox.getFont().deriveFont(7f));
-        add(jComboBox);
+        monthJComboBox.addItemListener(jComboBoxItemListener);
+        monthJComboBox.setSize(25 * 7 + 1, 25 + 1);
+        monthJComboBox.setLocation(0, 0);
+        monthJComboBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        monthJComboBox.setFont(monthJComboBox.getFont().deriveFont(7f));
+        add(monthJComboBox);
+
+        gregorianCalendar = new GregorianCalendar();
+        yearJComboBox = new JComboBox();
+        for (int i = 0; i < 21; i++) {
+            yearJComboBox.addItem(gregorianCalendar.get(GregorianCalendar.YEAR) - 10 + i);
+        }
+        yearJComboBox.setSelectedIndex(10);
+        yearJComboBox.addItemListener(jComboBoxItemListener);
+        yearJComboBox.setSize(25 * 7 + 1, 25 + 1);
+        yearJComboBox.setLocation(25 * 7, 0);
+        yearJComboBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        yearJComboBox.setFont(yearJComboBox.getFont().deriveFont(7f));
+        add(yearJComboBox);
 
         for (int i = 0; i < 7; i++) {
             JTextArea jTextArea = new JTextArea();
@@ -66,11 +79,10 @@ public class Calendar extends JFrame {
 
     static void updateJTextAreas() {
         if (jTextAreas != null) {
-            YearMonth yearMonth = YearMonth.of(2018, jComboBox.getSelectedIndex() + 1);
+            YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
             int lengthOfMonth = yearMonth.lengthOfMonth();
-            GregorianCalendar gregorianCalendar = new GregorianCalendar(2018, jComboBox.getSelectedIndex(), 1);
+            GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
             int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
-            System.out.println(offset);
             for (int i = 0; i < 7; i++) {
                 for (int j = 0; j < 6; j++) {
                     int date = i + j * 7 - offset;
