@@ -1,4 +1,4 @@
 DONE - Get application window to open
 DONE - Show a visualisation of the days in the current month
-- Allow the user to change which month is visualised
+DONE - Allow the user to change which month is visualised
 - Allow the user to change which year is visualised
