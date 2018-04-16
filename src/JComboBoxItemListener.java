@@ -5,9 +5,7 @@ public class JComboBoxItemListener implements ItemListener {
 
     @Override
     public void itemStateChanged(ItemEvent event) {
-        if (event.getStateChange() == ItemEvent.SELECTED) {
-            Calendar.updateJTextAreas();
-        }
+        Calendar.updateCalendarBoxes();
     }
 
 }
