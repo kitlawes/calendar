@@ -8,22 +8,28 @@ import java.util.GregorianCalendar;
 
 public class Calendar extends JFrame {
 
+    static Calendar calendar;
     static JComboBox monthJComboBox;
     static JComboBox yearJComboBox;
-    static JTextArea[][] jTextAreas;
+    static JTextArea[] headerJTextAreas;
+    static JTextArea[][] calendarBoxesJTextAreas;
     static String[][][][] calendarBoxesContents;
+    static final String filename = "calendar_boxes_contents.ser";
     static boolean calendarBoxesContentsLocked;
 
     public static void main(String[] args) {
-        new Calendar();
+        calendar = new Calendar();
+        setup(calendar);
     }
 
-    public Calendar() {
+    static void setup(Calendar calendar) {
 
-        setSize(50 * 7 + 17, 200 + 40);
-        setLocation(3450, 800);
-        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
-        setLayout(null);
+        calendar.setSize(50 * 7 + 17, 200 + 40);
+        calendar.setLocation(3450, 800);
+        calendar.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        calendar.setLayout(null);
+        JFrameComponentAdapter jFrameComponentAdapter = new JFrameComponentAdapter();
+        calendar.addComponentListener(jFrameComponentAdapter);
 
         monthJComboBox = new JComboBox();
         for (int i = 0; i < 12; i++) {
@@ -31,13 +37,11 @@ public class Calendar extends JFrame {
         }
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         monthJComboBox.setSelectedIndex(gregorianCalendar.get(GregorianCalendar.MONTH));
-        monthJComboBox.setSize(25 * 7 + 1, 25 + 1);
-        monthJComboBox.setLocation(0, 0);
         monthJComboBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         monthJComboBox.setFont(monthJComboBox.getFont().deriveFont(7f));
         JComboBoxItemListener jComboBoxItemListener = new JComboBoxItemListener();
         monthJComboBox.addItemListener(jComboBoxItemListener);
-        add(monthJComboBox);
+        calendar.add(monthJComboBox);
 
         gregorianCalendar = new GregorianCalendar();
         yearJComboBox = new JComboBox();
@@ -45,42 +49,40 @@ public class Calendar extends JFrame {
             yearJComboBox.addItem(gregorianCalendar.get(GregorianCalendar.YEAR) - 10 + i);
         }
         yearJComboBox.setSelectedIndex(10);
-        yearJComboBox.setSize(25 * 7 + 1, 25 + 1);
-        yearJComboBox.setLocation(25 * 7, 0);
         yearJComboBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         yearJComboBox.setFont(yearJComboBox.getFont().deriveFont(7f));
         yearJComboBox.addItemListener(jComboBoxItemListener);
-        add(yearJComboBox);
+        calendar.add(yearJComboBox);
 
+        headerJTextAreas = new JTextArea[7];
         for (int i = 0; i < 7; i++) {
             JTextArea jTextArea = new JTextArea();
             jTextArea.setText(DayOfWeek.of(i + 1).toString());
-            jTextArea.setSize(50 + 1, 25 + 1);
-            jTextArea.setLocation(50 * i, 25);
             jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
             jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
             jTextArea.setBackground(Color.LIGHT_GRAY);
             jTextArea.setEditable(false);
-            add(jTextArea);
+            calendar.add(jTextArea);
+            headerJTextAreas[i] = jTextArea;
         }
 
-        jTextAreas = new JTextArea[6][7];
+        JTextAreaDocumentListener jTextAreaDocumentListener = new JTextAreaDocumentListener();
+        calendarBoxesJTextAreas = new JTextArea[6][7];
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 6; j++) {
                 JTextArea jTextArea = new JTextArea();
-                jTextArea.setSize(50 + 1, 25 + 1);
-                jTextArea.setLocation(50 * i, 50 + 25 * j);
                 jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
                 jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
                 jTextArea.setBackground(Color.WHITE);
-                JTextAreaDocumentListener jTextAreaDocumentListener = new JTextAreaDocumentListener();
                 jTextArea.getDocument().addDocumentListener(jTextAreaDocumentListener);
-                add(jTextArea);
-                jTextAreas[j][i] = jTextArea;
+                calendar.add(jTextArea);
+                calendarBoxesJTextAreas[j][i] = jTextArea;
             }
         }
 
-        File file = new File("test.ser");
+        setComponentsSizeAndLocation();
+
+        File file = new File(filename);
         if (file.exists()) {
 
             try {
@@ -119,30 +121,31 @@ public class Calendar extends JFrame {
 
         updateCalendarBoxes();
 
-        setVisible(true);
+        calendar.setVisible(true);
 
     }
 
     static void updateCalendarBoxes() {
         calendarBoxesContentsLocked = true;
-        if (jTextAreas != null) {
+        if (calendarBoxesJTextAreas != null) {
             YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
             int lengthOfMonth = yearMonth.lengthOfMonth();
             GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
             int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
             for (int i = 0; i < 7; i++) {
                 for (int j = 0; j < 6; j++) {
-                    jTextAreas[j][i].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i]);
+                    calendarBoxesJTextAreas[j][i].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i]);
                     int date = i + j * 7 - offset;
                     if (date >= 1 && date <= lengthOfMonth) {
-                        jTextAreas[j][i].setBackground(Color.WHITE);
-                        jTextAreas[j][i].setEditable(true);
+                        calendarBoxesJTextAreas[j][i].setBackground(Color.WHITE);
+                        calendarBoxesJTextAreas[j][i].setEditable(true);
                     } else {
-                        jTextAreas[j][i].setBackground(Color.GRAY);
-                        jTextAreas[j][i].setEditable(false);
+                        calendarBoxesJTextAreas[j][i].setBackground(Color.GRAY);
+                        calendarBoxesJTextAreas[j][i].setEditable(false);
                     }
                 }
             }
+            calendar.repaint();
         }
         calendarBoxesContentsLocked = false;
     }
@@ -152,12 +155,12 @@ public class Calendar extends JFrame {
 
             for (int i = 0; i < 7; i++) {
                 for (int j = 0; j < 6; j++) {
-                    calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i] = jTextAreas[j][i].getText();
+                    calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i] = calendarBoxesJTextAreas[j][i].getText();
                 }
             }
 
             try {
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream("test.ser"));
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(filename));
                 objectOutputStream.writeObject(calendarBoxesContents);
                 objectOutputStream.close();
             } catch (IOException e) {
@@ -165,6 +168,37 @@ public class Calendar extends JFrame {
             }
 
         }
+    }
+
+    static void setComponentsSizeAndLocation() {
+
+        double componentWidth = (double) (calendar.getSize().width - 17) / 14;
+        double componentHeight = (double) (calendar.getSize().height - 40) / 8;
+
+        monthJComboBox.setSize((int) Math.ceil(componentWidth * 7 + 1), (int) Math.ceil(componentHeight + 1));
+        monthJComboBox.setLocation(0, 0);
+
+        yearJComboBox.setSize((int) Math.ceil(componentWidth * 7 + 1), (int) Math.ceil(componentHeight + 1));
+        yearJComboBox.setLocation((int) Math.round(componentWidth * 7), 0);
+
+        for (int i = 0; i < 7; i++) {
+            headerJTextAreas[i].setSize((int) Math.ceil(componentWidth * 2 + 1), (int) Math.ceil(componentHeight + 1));
+            headerJTextAreas[i].setLocation((int) Math.round(componentWidth * 2 * i), (int) Math.round(componentHeight));
+        }
+
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 6; j++) {
+                calendarBoxesJTextAreas[j][i].setSize((int) Math.ceil(componentWidth * 2 + 1), (int) Math.ceil(componentHeight + 1));
+                calendarBoxesJTextAreas[j][i].setLocation((int) Math.round(componentWidth * 2 * i), (int) Math.round(componentHeight * 2 + componentHeight * j));
+            }
+        }
+
+    }
+
+    @Override
+    public void paint(Graphics g) {
+        super.paint(g);
+        g.drawRect(8, 31, calendar.getSize().width - 17, calendar.getSize().height - 40);
     }
 
 }
