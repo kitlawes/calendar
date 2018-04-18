@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.time.DayOfWeek;
 import java.time.Month;
@@ -14,6 +16,7 @@ public class Calendar extends JFrame {
     static JTextArea[] headerJTextAreas;
     static JTextArea[][][] calendarBoxesJTextAreas;
     static String[][][][][] calendarBoxesContents;
+    static JButton clearCalendarJButton;
     static final String filename = "calendar_boxes_contents.ser";
     static boolean calendarBoxesContentsLocked;
 
@@ -24,8 +27,11 @@ public class Calendar extends JFrame {
 
     static void setup(Calendar calendar) {
 
-        calendar.setSize(50 * 7 + 17, 200 + 40);
-        calendar.setLocation(3450, 800);
+        calendar.setSize(50 * 7 + 17, 25 * 9 + 40);
+        GraphicsDevice[] graphicsDevices = GraphicsEnvironment.getLocalGraphicsEnvironment().getScreenDevices();
+        int graphicsDevicesWidth = graphicsDevices[0].getDisplayMode().getWidth() + graphicsDevices[1].getDisplayMode().getWidth();
+        int graphicsDevicesHeight = graphicsDevices[0].getDisplayMode().getHeight();
+        calendar.setLocation(graphicsDevicesWidth - calendar.getWidth() - 10, graphicsDevicesHeight - calendar.getHeight() - 40);
         calendar.setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         calendar.setLayout(null);
         JFrameComponentAdapter jFrameComponentAdapter = new JFrameComponentAdapter();
@@ -84,6 +90,14 @@ public class Calendar extends JFrame {
             }
         }
 
+        clearCalendarJButton = new JButton();
+        clearCalendarJButton.setText("CLEAR CALENDAR");
+        clearCalendarJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        clearCalendarJButton.setFont(clearCalendarJButton.getFont().deriveFont(7f));
+        JButtonActionListener jButtonActionListener = new JButtonActionListener();
+        clearCalendarJButton.addActionListener(jButtonActionListener);
+        calendar.add(clearCalendarJButton);
+
         setComponentsSizeAndLocation();
 
         File file = new File(filename);
@@ -132,30 +146,28 @@ public class Calendar extends JFrame {
 
     static void updateCalendarBoxes() {
         calendarBoxesContentsLocked = true;
-        if (calendarBoxesJTextAreas != null) {
-            YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
-            int lengthOfMonth = yearMonth.lengthOfMonth();
-            GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
-            int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
-            for (int i = 0; i < 7; i++) {
-                for (int j = 0; j < 6; j++) {
-                    calendarBoxesJTextAreas[j][i][0].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][0]);
-                    calendarBoxesJTextAreas[j][i][1].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][1]);
-                    calendarBoxesJTextAreas[j][i][0].setEditable(false);
-                    int date = i + j * 7 - offset;
-                    if (date >= 1 && date <= lengthOfMonth) {
-                        calendarBoxesJTextAreas[j][i][0].setBackground(Color.WHITE);
-                        calendarBoxesJTextAreas[j][i][1].setBackground(Color.WHITE);
-                        calendarBoxesJTextAreas[j][i][1].setEditable(true);
-                    } else {
-                        calendarBoxesJTextAreas[j][i][0].setBackground(Color.GRAY);
-                        calendarBoxesJTextAreas[j][i][1].setBackground(Color.GRAY);
-                        calendarBoxesJTextAreas[j][i][1].setEditable(false);
-                    }
+        YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
+        int lengthOfMonth = yearMonth.lengthOfMonth();
+        GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
+        int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 6; j++) {
+                calendarBoxesJTextAreas[j][i][0].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][0]);
+                calendarBoxesJTextAreas[j][i][1].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][1]);
+                calendarBoxesJTextAreas[j][i][0].setEditable(false);
+                int date = i + j * 7 - offset;
+                if (date >= 1 && date <= lengthOfMonth) {
+                    calendarBoxesJTextAreas[j][i][0].setBackground(Color.WHITE);
+                    calendarBoxesJTextAreas[j][i][1].setBackground(Color.WHITE);
+                    calendarBoxesJTextAreas[j][i][1].setEditable(true);
+                } else {
+                    calendarBoxesJTextAreas[j][i][0].setBackground(Color.GRAY);
+                    calendarBoxesJTextAreas[j][i][1].setBackground(Color.GRAY);
+                    calendarBoxesJTextAreas[j][i][1].setEditable(false);
                 }
             }
-            calendar.repaint();
         }
+        calendar.repaint();
         calendarBoxesContentsLocked = false;
     }
 
@@ -183,7 +195,7 @@ public class Calendar extends JFrame {
     static void setComponentsSizeAndLocation() {
 
         double componentWidth = (double) (calendar.getSize().width - 17) / 14;
-        double componentHeight = (double) (calendar.getSize().height - 40) / 8;
+        double componentHeight = (double) (calendar.getSize().height - 40) / 9;
 
         monthJComboBox.setSize((int) Math.round(componentWidth * 7), (int) Math.round(componentHeight));
         monthJComboBox.setLocation(0, 0);
@@ -208,6 +220,27 @@ public class Calendar extends JFrame {
             }
         }
 
+        clearCalendarJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
+        clearCalendarJButton.setLocation(0, (int) Math.round(componentHeight * 8));
+
+    }
+
+    static void clearCalendarBoxesContents() {
+        for (int i = 0; i < 21; i++) {
+            for (int j = 0; j < 12; j++) {
+                for (int k = 0; k < 6; k++) {
+                    for (int l = 0; l < 7; l++) {
+                        calendarBoxesContents[i][j][k][l][1] = "";
+                    }
+                }
+            }
+        }
+    }
+
+    static void clearCalendarBoxes() {
+        clearCalendarBoxesContents();
+        updateCalendarBoxes();
+        saveCalendarBoxesContents();
     }
 
     @Override

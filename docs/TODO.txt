@@ -8,4 +8,4 @@ DONE - Allow text entered into calendar boxes to persist while application is no
 DONE - Make components stretch and shrink with the application window when it is resized
 DONE - Make blank calendar boxes and header calendar boxes uneditable
 DONE - Make date number in calendar boxes uneditable
-- Add reset button to reset the contents of all calendar boxes
+DONE - Add clear calendar button to clear the contents of all calendar boxes
