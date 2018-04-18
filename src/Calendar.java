@@ -12,8 +12,8 @@ public class Calendar extends JFrame {
     static JComboBox monthJComboBox;
     static JComboBox yearJComboBox;
     static JTextArea[] headerJTextAreas;
-    static JTextArea[][] calendarBoxesJTextAreas;
-    static String[][][][] calendarBoxesContents;
+    static JTextArea[][][] calendarBoxesJTextAreas;
+    static String[][][][][] calendarBoxesContents;
     static final String filename = "calendar_boxes_contents.ser";
     static boolean calendarBoxesContentsLocked;
 
@@ -37,7 +37,7 @@ public class Calendar extends JFrame {
         }
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         monthJComboBox.setSelectedIndex(gregorianCalendar.get(GregorianCalendar.MONTH));
-        monthJComboBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        monthJComboBox.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
         monthJComboBox.setFont(monthJComboBox.getFont().deriveFont(7f));
         JComboBoxItemListener jComboBoxItemListener = new JComboBoxItemListener();
         monthJComboBox.addItemListener(jComboBoxItemListener);
@@ -49,7 +49,7 @@ public class Calendar extends JFrame {
             yearJComboBox.addItem(gregorianCalendar.get(GregorianCalendar.YEAR) - 10 + i);
         }
         yearJComboBox.setSelectedIndex(10);
-        yearJComboBox.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        yearJComboBox.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
         yearJComboBox.setFont(yearJComboBox.getFont().deriveFont(7f));
         yearJComboBox.addItemListener(jComboBoxItemListener);
         calendar.add(yearJComboBox);
@@ -58,7 +58,7 @@ public class Calendar extends JFrame {
         for (int i = 0; i < 7; i++) {
             JTextArea jTextArea = new JTextArea();
             jTextArea.setText(DayOfWeek.of(i + 1).toString());
-            jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+            jTextArea.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
             jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
             jTextArea.setBackground(Color.LIGHT_GRAY);
             jTextArea.setEditable(false);
@@ -67,16 +67,20 @@ public class Calendar extends JFrame {
         }
 
         JTextAreaDocumentListener jTextAreaDocumentListener = new JTextAreaDocumentListener();
-        calendarBoxesJTextAreas = new JTextArea[6][7];
+        calendarBoxesJTextAreas = new JTextArea[6][7][2];
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 6; j++) {
                 JTextArea jTextArea = new JTextArea();
-                jTextArea.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+                jTextArea.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
                 jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
-                jTextArea.setBackground(Color.WHITE);
+                calendar.add(jTextArea);
+                calendarBoxesJTextAreas[j][i][0] = jTextArea;
+                jTextArea = new JTextArea();
+                jTextArea.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.BLACK));
+                jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
                 jTextArea.getDocument().addDocumentListener(jTextAreaDocumentListener);
                 calendar.add(jTextArea);
-                calendarBoxesJTextAreas[j][i] = jTextArea;
+                calendarBoxesJTextAreas[j][i][1] = jTextArea;
             }
         }
 
@@ -87,7 +91,7 @@ public class Calendar extends JFrame {
 
             try {
                 ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file));
-                calendarBoxesContents = (String[][][][]) objectInputStream.readObject();
+                calendarBoxesContents = (String[][][][][]) objectInputStream.readObject();
                 objectInputStream.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -97,7 +101,7 @@ public class Calendar extends JFrame {
 
         } else {
 
-            calendarBoxesContents = new String[21][12][6][7];
+            calendarBoxesContents = new String[21][12][6][7][2];
             for (int i = 0; i < 21; i++) {
                 for (int j = 0; j < 12; j++) {
                     YearMonth yearMonth = YearMonth.of(2008 + i, j + 1);
@@ -108,10 +112,11 @@ public class Calendar extends JFrame {
                         for (int l = 0; l < 7; l++) {
                             int date = l + k * 7 - offset;
                             if (date >= 1 && date <= lengthOfMonth) {
-                                calendarBoxesContents[i][j][k][l] = String.valueOf(date);
+                                calendarBoxesContents[i][j][k][l][0] = String.valueOf(date);
                             } else {
-                                calendarBoxesContents[i][j][k][l] = "";
+                                calendarBoxesContents[i][j][k][l][0] = "";
                             }
+                            calendarBoxesContents[i][j][k][l][1] = "";
                         }
                     }
                 }
@@ -134,14 +139,18 @@ public class Calendar extends JFrame {
             int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
             for (int i = 0; i < 7; i++) {
                 for (int j = 0; j < 6; j++) {
-                    calendarBoxesJTextAreas[j][i].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i]);
+                    calendarBoxesJTextAreas[j][i][0].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][0]);
+                    calendarBoxesJTextAreas[j][i][1].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][1]);
+                    calendarBoxesJTextAreas[j][i][0].setEditable(false);
                     int date = i + j * 7 - offset;
                     if (date >= 1 && date <= lengthOfMonth) {
-                        calendarBoxesJTextAreas[j][i].setBackground(Color.WHITE);
-                        calendarBoxesJTextAreas[j][i].setEditable(true);
+                        calendarBoxesJTextAreas[j][i][0].setBackground(Color.WHITE);
+                        calendarBoxesJTextAreas[j][i][1].setBackground(Color.WHITE);
+                        calendarBoxesJTextAreas[j][i][1].setEditable(true);
                     } else {
-                        calendarBoxesJTextAreas[j][i].setBackground(Color.GRAY);
-                        calendarBoxesJTextAreas[j][i].setEditable(false);
+                        calendarBoxesJTextAreas[j][i][0].setBackground(Color.GRAY);
+                        calendarBoxesJTextAreas[j][i][1].setBackground(Color.GRAY);
+                        calendarBoxesJTextAreas[j][i][1].setEditable(false);
                     }
                 }
             }
@@ -155,7 +164,8 @@ public class Calendar extends JFrame {
 
             for (int i = 0; i < 7; i++) {
                 for (int j = 0; j < 6; j++) {
-                    calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i] = calendarBoxesJTextAreas[j][i].getText();
+                    calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][0] = calendarBoxesJTextAreas[j][i][0].getText();
+                    calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][1] = calendarBoxesJTextAreas[j][i][1].getText();
                 }
             }
 
@@ -175,21 +185,26 @@ public class Calendar extends JFrame {
         double componentWidth = (double) (calendar.getSize().width - 17) / 14;
         double componentHeight = (double) (calendar.getSize().height - 40) / 8;
 
-        monthJComboBox.setSize((int) Math.ceil(componentWidth * 7 + 1), (int) Math.ceil(componentHeight + 1));
+        monthJComboBox.setSize((int) Math.round(componentWidth * 7), (int) Math.round(componentHeight));
         monthJComboBox.setLocation(0, 0);
 
-        yearJComboBox.setSize((int) Math.ceil(componentWidth * 7 + 1), (int) Math.ceil(componentHeight + 1));
+        yearJComboBox.setSize((int) Math.round(componentWidth * 14) - (int) Math.round(componentWidth * 7), (int) Math.round(componentHeight));
         yearJComboBox.setLocation((int) Math.round(componentWidth * 7), 0);
 
         for (int i = 0; i < 7; i++) {
-            headerJTextAreas[i].setSize((int) Math.ceil(componentWidth * 2 + 1), (int) Math.ceil(componentHeight + 1));
+            headerJTextAreas[i].setSize((int) Math.round(componentWidth * 2 * (i + 1)) - (int) Math.round(componentWidth * 2 * i),
+                    (int) Math.round(componentHeight * 2) - (int) Math.round(componentHeight));
             headerJTextAreas[i].setLocation((int) Math.round(componentWidth * 2 * i), (int) Math.round(componentHeight));
         }
 
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 6; j++) {
-                calendarBoxesJTextAreas[j][i].setSize((int) Math.ceil(componentWidth * 2 + 1), (int) Math.ceil(componentHeight + 1));
-                calendarBoxesJTextAreas[j][i].setLocation((int) Math.round(componentWidth * 2 * i), (int) Math.round(componentHeight * 2 + componentHeight * j));
+                calendarBoxesJTextAreas[j][i][0].setSize((int) Math.round(componentWidth * 2 * (i + 1)) - (int) Math.round(componentWidth * 2 * i),
+                        (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2) - (int) Math.round(componentHeight * 2 + componentHeight * j));
+                calendarBoxesJTextAreas[j][i][1].setSize((int) Math.round(componentWidth * 2 * (i + 1)) - (int) Math.round(componentWidth * 2 * i),
+                        (int) Math.round(componentHeight * 2 + componentHeight * (j + 1)) - (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2));
+                calendarBoxesJTextAreas[j][i][0].setLocation((int) Math.round(componentWidth * 2 * i), (int) Math.round(componentHeight * 2 + componentHeight * j));
+                calendarBoxesJTextAreas[j][i][1].setLocation((int) Math.round(componentWidth * 2 * i), (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2));
             }
         }
 
