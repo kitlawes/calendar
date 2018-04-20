@@ -9,7 +9,7 @@ DONE - Make components stretch and shrink with the application window when it is
 DONE - Make blank calendar boxes and header calendar boxes uneditable
 DONE - Make date number in calendar boxes uneditable
 DONE - Add clear calendar button to clear the contents of all calendar boxes
-- Add clear month button to clear the contents of all calendar boxes for the current month
+DONE - Add clear month button to clear the contents of all calendar boxes for the current month
 - Add clear year button to clear the contents of all calendar boxes for the current year
 - Add controls to copy the contents of all calendar boxes from the current month to a month specified by the user
 - Add controls to copy the contents of all calendar boxes from the current year to a year specified by the user

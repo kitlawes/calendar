@@ -14,6 +14,7 @@ public class Calendar extends JFrame {
     static JTextArea[] headerJTextAreas;
     static JTextArea[][][] calendarBoxesJTextAreas;
     static String[][][][][] calendarBoxesContents;
+    static JButton clearMonthJButton;
     static JButton clearCalendarJButton;
     static final String filename = "calendar_boxes_contents.ser";
     static boolean calendarBoxesContentsLocked;
@@ -88,11 +89,19 @@ public class Calendar extends JFrame {
             }
         }
 
+        clearMonthJButton = new JButton();
+        clearMonthJButton.setText("CLEAR MONTH");
+        clearMonthJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        clearMonthJButton.setFont(clearMonthJButton.getFont().deriveFont(7f));
+        JButtonActionListener jButtonActionListener = new JButtonActionListener();
+        clearMonthJButton.addActionListener(jButtonActionListener);
+        calendar.add(clearMonthJButton);
+
         clearCalendarJButton = new JButton();
         clearCalendarJButton.setText("CLEAR CALENDAR");
         clearCalendarJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
         clearCalendarJButton.setFont(clearCalendarJButton.getFont().deriveFont(7f));
-        JButtonActionListener jButtonActionListener = new JButtonActionListener();
+        jButtonActionListener = new JButtonActionListener();
         clearCalendarJButton.addActionListener(jButtonActionListener);
         calendar.add(clearCalendarJButton);
 
@@ -193,7 +202,7 @@ public class Calendar extends JFrame {
     static void setComponentsSizeAndLocation() {
 
         double componentWidth = (double) (calendar.getSize().width - 17) / 14;
-        double componentHeight = (double) (calendar.getSize().height - 40) / 9;
+        double componentHeight = (double) (calendar.getSize().height - 40) / 10;
 
         monthJComboBox.setSize((int) Math.round(componentWidth * 7), (int) Math.round(componentHeight));
         monthJComboBox.setLocation(0, 0);
@@ -218,14 +227,35 @@ public class Calendar extends JFrame {
             }
         }
 
-        clearCalendarJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
-        clearCalendarJButton.setLocation(0, (int) Math.round(componentHeight * 8));
+        clearMonthJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
+        clearMonthJButton.setLocation(0, (int) Math.round(componentHeight * 8));
+
+        clearCalendarJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
+        clearCalendarJButton.setLocation(0, (int) Math.round(componentHeight * 9));
 
     }
 
-    static void clearCalendarBoxesContents() {
-        for (int i = 0; i < 21; i++) {
-            for (int j = 0; j < 12; j++) {
+    static void clearCalendarBoxesContents(String periodToClear) {
+
+        int earliestMonthToClear = 0;
+        int latestMonthToClear = 0;
+        int earliestYearToClear = 0;
+        int latestYearToClear = 0;
+        if (periodToClear.equals("MONTH")) {
+            earliestMonthToClear = monthJComboBox.getSelectedIndex();
+            latestMonthToClear = monthJComboBox.getSelectedIndex();
+            earliestYearToClear = yearJComboBox.getSelectedIndex();
+            latestYearToClear = yearJComboBox.getSelectedIndex();
+        }
+        if (periodToClear.equals("ALL")) {
+            earliestMonthToClear = 0;
+            latestMonthToClear = 11;
+            earliestYearToClear = 0;
+            latestYearToClear = 20;
+        }
+
+        for (int i = earliestYearToClear; i <= latestYearToClear; i++) {
+            for (int j = earliestMonthToClear; j <= latestMonthToClear; j++) {
                 for (int k = 0; k < 6; k++) {
                     for (int l = 0; l < 7; l++) {
                         calendarBoxesContents[i][j][k][l][1] = "";
@@ -233,10 +263,11 @@ public class Calendar extends JFrame {
                 }
             }
         }
+
     }
 
-    static void clearCalendarBoxes() {
-        clearCalendarBoxesContents();
+    static void clearCalendarBoxes(String periodToClear) {
+        clearCalendarBoxesContents(periodToClear);
         updateCalendarBoxes();
         saveCalendarBoxesContents();
     }
