@@ -8,6 +8,9 @@ public class JButtonActionListener implements ActionListener {
             case "CLEAR MONTH":
                 Calendar.clearCalendarBoxes("MONTH");
                 break;
+            case "CLEAR YEAR":
+                Calendar.clearCalendarBoxes("YEAR");
+                break;
             case "CLEAR CALENDAR":
                 Calendar.clearCalendarBoxes("ALL");
                 break;

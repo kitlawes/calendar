@@ -15,6 +15,7 @@ public class Calendar extends JFrame {
     static JTextArea[][][] calendarBoxesJTextAreas;
     static String[][][][][] calendarBoxesContents;
     static JButton clearMonthJButton;
+    static JButton clearYearJButton;
     static JButton clearCalendarJButton;
     static final String filename = "calendar_boxes_contents.ser";
     static boolean calendarBoxesContentsLocked;
@@ -97,11 +98,17 @@ public class Calendar extends JFrame {
         clearMonthJButton.addActionListener(jButtonActionListener);
         calendar.add(clearMonthJButton);
 
+        clearYearJButton = new JButton();
+        clearYearJButton.setText("CLEAR YEAR");
+        clearYearJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        clearYearJButton.setFont(clearYearJButton.getFont().deriveFont(7f));
+        clearYearJButton.addActionListener(jButtonActionListener);
+        calendar.add(clearYearJButton);
+
         clearCalendarJButton = new JButton();
         clearCalendarJButton.setText("CLEAR CALENDAR");
         clearCalendarJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
         clearCalendarJButton.setFont(clearCalendarJButton.getFont().deriveFont(7f));
-        jButtonActionListener = new JButtonActionListener();
         clearCalendarJButton.addActionListener(jButtonActionListener);
         calendar.add(clearCalendarJButton);
 
@@ -202,7 +209,7 @@ public class Calendar extends JFrame {
     static void setComponentsSizeAndLocation() {
 
         double componentWidth = (double) (calendar.getSize().width - 17) / 14;
-        double componentHeight = (double) (calendar.getSize().height - 40) / 10;
+        double componentHeight = (double) (calendar.getSize().height - 40) / 11;
 
         monthJComboBox.setSize((int) Math.round(componentWidth * 7), (int) Math.round(componentHeight));
         monthJComboBox.setLocation(0, 0);
@@ -230,8 +237,11 @@ public class Calendar extends JFrame {
         clearMonthJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
         clearMonthJButton.setLocation(0, (int) Math.round(componentHeight * 8));
 
-        clearCalendarJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
-        clearCalendarJButton.setLocation(0, (int) Math.round(componentHeight * 9));
+        clearYearJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
+        clearYearJButton.setLocation(0, (int) Math.round(componentHeight * 9));
+
+        clearCalendarJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
+        clearCalendarJButton.setLocation(0, (int) Math.round(componentHeight * 10));
 
     }
 
@@ -244,6 +254,12 @@ public class Calendar extends JFrame {
         if (periodToClear.equals("MONTH")) {
             earliestMonthToClear = monthJComboBox.getSelectedIndex();
             latestMonthToClear = monthJComboBox.getSelectedIndex();
+            earliestYearToClear = yearJComboBox.getSelectedIndex();
+            latestYearToClear = yearJComboBox.getSelectedIndex();
+        }
+        if (periodToClear.equals("YEAR")) {
+            earliestMonthToClear = 0;
+            latestMonthToClear = 11;
             earliestYearToClear = yearJComboBox.getSelectedIndex();
             latestYearToClear = yearJComboBox.getSelectedIndex();
         }
