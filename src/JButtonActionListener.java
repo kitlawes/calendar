@@ -14,6 +14,9 @@ public class JButtonActionListener implements ActionListener {
             case "CLEAR CALENDAR":
                 Calendar.clearCalendarBoxes("ALL");
                 break;
+            case "COPY DAY":
+                Calendar.copyCalendarBox();
+                break;
         }
     }
 }

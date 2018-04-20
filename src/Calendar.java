@@ -17,6 +17,8 @@ public class Calendar extends JFrame {
     static JButton clearMonthJButton;
     static JButton clearYearJButton;
     static JButton clearCalendarJButton;
+    static JButton copyDayJButton;
+    static JComboBox dayToCopyJComboBox;
     static final String filename = "calendar_boxes_contents.ser";
     static boolean calendarBoxesContentsLocked;
 
@@ -49,7 +51,6 @@ public class Calendar extends JFrame {
         monthJComboBox.addItemListener(jComboBoxItemListener);
         calendar.add(monthJComboBox);
 
-        gregorianCalendar = new GregorianCalendar();
         yearJComboBox = new JComboBox();
         for (int i = 0; i < 21; i++) {
             yearJComboBox.addItem(gregorianCalendar.get(GregorianCalendar.YEAR) - 10 + i);
@@ -112,6 +113,23 @@ public class Calendar extends JFrame {
         clearCalendarJButton.addActionListener(jButtonActionListener);
         calendar.add(clearCalendarJButton);
 
+        copyDayJButton = new JButton();
+        copyDayJButton.setText("COPY DAY");
+        copyDayJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        copyDayJButton.setFont(copyDayJButton.getFont().deriveFont(7f));
+        copyDayJButton.addActionListener(jButtonActionListener);
+        calendar.add(copyDayJButton);
+
+        dayToCopyJComboBox = new JComboBox();
+        YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
+        int lengthOfMonth = yearMonth.lengthOfMonth();
+        for (int i = 0; i < lengthOfMonth; i++) {
+            dayToCopyJComboBox.addItem(i + 1);
+        }
+        dayToCopyJComboBox.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        dayToCopyJComboBox.setFont(dayToCopyJComboBox.getFont().deriveFont(7f));
+        calendar.add(dayToCopyJComboBox);
+
         setComponentsSizeAndLocation();
 
         File file = new File(filename);
@@ -132,8 +150,8 @@ public class Calendar extends JFrame {
             calendarBoxesContents = new String[21][12][6][7][2];
             for (int i = 0; i < 21; i++) {
                 for (int j = 0; j < 12; j++) {
-                    YearMonth yearMonth = YearMonth.of(2008 + i, j + 1);
-                    int lengthOfMonth = yearMonth.lengthOfMonth();
+                    yearMonth = YearMonth.of(2008 + i, j + 1);
+                    lengthOfMonth = yearMonth.lengthOfMonth();
                     gregorianCalendar = new GregorianCalendar(2008 + i, j, 1);
                     int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
                     for (int k = 0; k < 6; k++) {
@@ -208,41 +226,58 @@ public class Calendar extends JFrame {
 
     static void setComponentsSizeAndLocation() {
 
-        double componentWidth = (double) (calendar.getSize().width - 17) / 14;
-        double componentHeight = (double) (calendar.getSize().height - 40) / 11;
+        double componentWidth = (double) (calendar.getSize().width - 17) / 42;
+        double componentHeight = (double) (calendar.getSize().height - 40) / 10;
 
-        monthJComboBox.setSize((int) Math.round(componentWidth * 7), (int) Math.round(componentHeight));
+        monthJComboBox.setSize((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight));
         monthJComboBox.setLocation(0, 0);
 
-        yearJComboBox.setSize((int) Math.round(componentWidth * 14) - (int) Math.round(componentWidth * 7), (int) Math.round(componentHeight));
-        yearJComboBox.setLocation((int) Math.round(componentWidth * 7), 0);
+        yearJComboBox.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 21), (int) Math.round(componentHeight));
+        yearJComboBox.setLocation((int) Math.round(componentWidth * 21), 0);
 
         for (int i = 0; i < 7; i++) {
-            headerJTextAreas[i].setSize((int) Math.round(componentWidth * 2 * (i + 1)) - (int) Math.round(componentWidth * 2 * i),
+            headerJTextAreas[i].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
                     (int) Math.round(componentHeight * 2) - (int) Math.round(componentHeight));
-            headerJTextAreas[i].setLocation((int) Math.round(componentWidth * 2 * i), (int) Math.round(componentHeight));
+            headerJTextAreas[i].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight));
         }
 
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 6; j++) {
-                calendarBoxesJTextAreas[j][i][0].setSize((int) Math.round(componentWidth * 2 * (i + 1)) - (int) Math.round(componentWidth * 2 * i),
+                calendarBoxesJTextAreas[j][i][0].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
                         (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2) - (int) Math.round(componentHeight * 2 + componentHeight * j));
-                calendarBoxesJTextAreas[j][i][1].setSize((int) Math.round(componentWidth * 2 * (i + 1)) - (int) Math.round(componentWidth * 2 * i),
+                calendarBoxesJTextAreas[j][i][1].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
                         (int) Math.round(componentHeight * 2 + componentHeight * (j + 1)) - (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2));
-                calendarBoxesJTextAreas[j][i][0].setLocation((int) Math.round(componentWidth * 2 * i), (int) Math.round(componentHeight * 2 + componentHeight * j));
-                calendarBoxesJTextAreas[j][i][1].setLocation((int) Math.round(componentWidth * 2 * i), (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2));
+                calendarBoxesJTextAreas[j][i][0].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight * 2 + componentHeight * j));
+                calendarBoxesJTextAreas[j][i][1].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2));
             }
         }
 
-        clearMonthJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
+        clearMonthJButton.setSize((int) Math.round(componentWidth * 14),
+                (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
         clearMonthJButton.setLocation(0, (int) Math.round(componentHeight * 8));
 
-        clearYearJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
-        clearYearJButton.setLocation(0, (int) Math.round(componentHeight * 9));
+        clearYearJButton.setSize((int) Math.round(componentWidth * 28) - (int) Math.round(componentWidth * 14),
+                (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
+        clearYearJButton.setLocation((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 8));
 
-        clearCalendarJButton.setSize((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
-        clearCalendarJButton.setLocation(0, (int) Math.round(componentHeight * 10));
+        clearCalendarJButton.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 28),
+                (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
+        clearCalendarJButton.setLocation((int) Math.round(componentWidth * 28), (int) Math.round(componentHeight * 8));
 
+        copyDayJButton.setSize((int) Math.round(componentWidth * 21),
+                (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
+        copyDayJButton.setLocation(0, (int) Math.round(componentHeight * 9));
+
+        dayToCopyJComboBox.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 21),
+                (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
+        dayToCopyJComboBox.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight * 9));
+
+    }
+
+    static void clearCalendarBoxes(String periodToClear) {
+        clearCalendarBoxesContents(periodToClear);
+        updateCalendarBoxes();
+        saveCalendarBoxesContents();
     }
 
     static void clearCalendarBoxesContents(String periodToClear) {
@@ -282,10 +317,34 @@ public class Calendar extends JFrame {
 
     }
 
-    static void clearCalendarBoxes(String periodToClear) {
-        clearCalendarBoxesContents(periodToClear);
+    static void copyCalendarBox() {
+        copyCalendarBoxContents();
         updateCalendarBoxes();
         saveCalendarBoxesContents();
+    }
+
+    static void copyCalendarBoxContents() {
+
+        GregorianCalendar gregorianCalendar = new GregorianCalendar(
+                (int) yearJComboBox.getSelectedItem(),
+                monthJComboBox.getSelectedIndex(),
+                (int) dayToCopyJComboBox.getSelectedItem());
+        gregorianCalendar.setMinimalDaysInFirstWeek(1);
+        int dayToCopyFrom = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7;
+        int weekToCopyFrom = gregorianCalendar.get(GregorianCalendar.WEEK_OF_MONTH) - 1;
+        int monthToCopyFrom = gregorianCalendar.get(GregorianCalendar.MONTH);
+        int yearToCopyFrom = yearJComboBox.getSelectedIndex();
+        for (int i = yearToCopyFrom; i < 21; i++) {
+            int earliestMonthToCopyFrom = i == yearToCopyFrom ? monthToCopyFrom : 0;
+            for (int j = earliestMonthToCopyFrom; j < 12; j++) {
+                int earliestWeekToCopyFrom = i == yearToCopyFrom && j == earliestMonthToCopyFrom ? weekToCopyFrom : 0;
+                for (int k = earliestWeekToCopyFrom; k < 6; k++) {
+                    calendarBoxesContents[i][j][k][dayToCopyFrom][1]
+                            = calendarBoxesContents[yearToCopyFrom][monthToCopyFrom][weekToCopyFrom][dayToCopyFrom][1];
+                }
+            }
+        }
+
     }
 
     @Override
