@@ -339,8 +339,15 @@ public class Calendar extends JFrame {
             for (int j = earliestMonthToCopyFrom; j < 12; j++) {
                 int earliestWeekToCopyFrom = i == yearToCopyFrom && j == earliestMonthToCopyFrom ? weekToCopyFrom : 0;
                 for (int k = earliestWeekToCopyFrom; k < 6; k++) {
-                    calendarBoxesContents[i][j][k][dayToCopyFrom][1]
-                            = calendarBoxesContents[yearToCopyFrom][monthToCopyFrom][weekToCopyFrom][dayToCopyFrom][1];
+                    YearMonth yearMonth = YearMonth.of(2008 + i, j + 1);
+                    int lengthOfMonth = yearMonth.lengthOfMonth();
+                    gregorianCalendar = new GregorianCalendar(2008 + i, j, 1);
+                    int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
+                    int date = dayToCopyFrom + k * 7 - offset;
+                    if (date >= 1 && date <= lengthOfMonth) {
+                        calendarBoxesContents[i][j][k][dayToCopyFrom][1]
+                                = calendarBoxesContents[yearToCopyFrom][monthToCopyFrom][weekToCopyFrom][dayToCopyFrom][1];
+                    }
                 }
             }
         }
