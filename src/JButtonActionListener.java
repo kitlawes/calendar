@@ -17,6 +17,14 @@ public class JButtonActionListener implements ActionListener {
             case "COPY DAY":
                 Calendar.copyCalendarBox();
                 break;
+            case "DEFAULT COLOURS":
+                Calendar.setComponentsColours(false);
+                Calendar.applyComponentsColours();
+                break;
+            case "RANDOM COLOURS":
+                Calendar.setComponentsColours(true);
+                Calendar.applyComponentsColours();
+                break;
         }
     }
 }

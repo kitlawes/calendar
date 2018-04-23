@@ -5,6 +5,7 @@ import java.time.DayOfWeek;
 import java.time.Month;
 import java.time.YearMonth;
 import java.util.GregorianCalendar;
+import java.util.Random;
 
 public class Calendar extends JFrame {
 
@@ -25,8 +26,14 @@ public class Calendar extends JFrame {
     static JCheckBox weeksIntervalJCheckBox;
     static JLabel weeksIntervalJLabel;
     static JTextField weeksIntervalJTextField;
+    static JButton defaultColoursJButton;
+    static JButton randomColoursJButton;
     static final String filename = "calendar_boxes_contents.ser";
     static boolean calendarBoxesContentsLocked;
+    static Color componentsColour1;
+    static Color componentsColour2;
+    static Color componentsColour3;
+    static Color componentsColour4;
 
     public static void main(String[] args) {
         calendar = new Calendar();
@@ -73,7 +80,6 @@ public class Calendar extends JFrame {
             jTextArea.setText(DayOfWeek.of(i + 1).toString());
             jTextArea.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
             jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
-            jTextArea.setBackground(Color.LIGHT_GRAY);
             jTextArea.setEditable(false);
             calendar.add(jTextArea);
             headerJTextAreas[i] = jTextArea;
@@ -148,6 +154,7 @@ public class Calendar extends JFrame {
         copiesJLabel.setFont(copiesJLabel.getFont().deriveFont(7f));
         copiesJLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         copiesJLabel.setEnabled(false);
+        copiesJLabel.setOpaque(true);
         calendar.add(copiesJLabel);
 
         copiesJTextField = new JTextField();
@@ -167,6 +174,7 @@ public class Calendar extends JFrame {
         weeksIntervalJLabel.setFont(weeksIntervalJLabel.getFont().deriveFont(7f));
         weeksIntervalJLabel.setHorizontalAlignment(SwingConstants.RIGHT);
         weeksIntervalJLabel.setEnabled(false);
+        weeksIntervalJLabel.setOpaque(true);
         calendar.add(weeksIntervalJLabel);
 
         weeksIntervalJTextField = new JTextField();
@@ -175,7 +183,23 @@ public class Calendar extends JFrame {
         weeksIntervalJTextField.setEnabled(false);
         calendar.add(weeksIntervalJTextField);
 
+        defaultColoursJButton = new JButton();
+        defaultColoursJButton.setText("DEFAULT COLOURS");
+        defaultColoursJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        defaultColoursJButton.setFont(defaultColoursJButton.getFont().deriveFont(7f));
+        defaultColoursJButton.addActionListener(jButtonActionListener);
+        calendar.add(defaultColoursJButton);
+
+        randomColoursJButton = new JButton();
+        randomColoursJButton.setText("RANDOM COLOURS");
+        randomColoursJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        randomColoursJButton.setFont(randomColoursJButton.getFont().deriveFont(7f));
+        randomColoursJButton.addActionListener(jButtonActionListener);
+        calendar.add(randomColoursJButton);
+
         setComponentsSizeAndLocation();
+        setComponentsColours(false);
+        applyComponentsColours();
 
         File file = new File(filename);
         if (file.exists()) {
@@ -234,17 +258,12 @@ public class Calendar extends JFrame {
                 calendarBoxesJTextAreas[j][i][0].setEditable(false);
                 int date = i + j * 7 - offset;
                 if (date >= 1 && date <= lengthOfMonth) {
-                    calendarBoxesJTextAreas[j][i][0].setBackground(Color.WHITE);
-                    calendarBoxesJTextAreas[j][i][1].setBackground(Color.WHITE);
                     calendarBoxesJTextAreas[j][i][1].setEditable(true);
                 } else {
-                    calendarBoxesJTextAreas[j][i][0].setBackground(Color.GRAY);
-                    calendarBoxesJTextAreas[j][i][1].setBackground(Color.GRAY);
                     calendarBoxesJTextAreas[j][i][1].setEditable(false);
                 }
             }
         }
-        calendar.repaint();
         calendarBoxesContentsLocked = false;
     }
 
@@ -272,7 +291,7 @@ public class Calendar extends JFrame {
     static void setComponentsSizeAndLocation() {
 
         double componentWidth = (double) (calendar.getSize().width - 17) / 42;
-        double componentHeight = (double) (calendar.getSize().height - 40) / 11;
+        double componentHeight = (double) (calendar.getSize().height - 40) / 12;
 
         monthJComboBox.setSize((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight));
         monthJComboBox.setLocation(0, 0);
@@ -332,6 +351,13 @@ public class Calendar extends JFrame {
         weeksIntervalJTextField.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 35),
                 (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
         weeksIntervalJTextField.setLocation((int) Math.round(componentWidth * 35), (int) Math.round(componentHeight * 10));
+
+        defaultColoursJButton.setSize((int) Math.round(componentWidth * 21),
+                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11));
+        defaultColoursJButton.setLocation(0, (int) Math.round(componentHeight * 11));
+        randomColoursJButton.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 21),
+                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11));
+        randomColoursJButton.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight * 11));
 
     }
 
@@ -452,6 +478,57 @@ public class Calendar extends JFrame {
         copiesJTextField.setEnabled(copiesJCheckBox.isSelected());
         weeksIntervalJLabel.setEnabled(weeksIntervalJCheckBox.isSelected());
         weeksIntervalJTextField.setEnabled(weeksIntervalJCheckBox.isSelected());
+        copiesJCheckBox.revalidate();
+        weeksIntervalJCheckBox.revalidate();
+    }
+
+    static void setComponentsColours(boolean randomColours) {
+        int redAdjustment = 0;
+        int greenAdjustment = 0;
+        int blueAdjustment = 0;
+        if (randomColours) {
+            Random random = new Random();
+            redAdjustment = random.nextInt(101) - 50;
+            greenAdjustment = random.nextInt(101) - 50;
+            blueAdjustment = random.nextInt(101) - 50;
+        }
+        componentsColour1 = new Color(128 + redAdjustment, 128 + greenAdjustment, 128 + blueAdjustment);
+        componentsColour2 = new Color(Math.min(255, 192 + redAdjustment), Math.min(255, 192 + greenAdjustment), Math.min(255, 192 + blueAdjustment));
+        componentsColour3 = new Color(Math.min(255, 238 + redAdjustment), Math.min(255, 238 + greenAdjustment), Math.min(255, 238 + blueAdjustment));
+        componentsColour4 = new Color(Math.min(255, 255 + redAdjustment), Math.min(255, 255 + greenAdjustment), Math.min(255, 255 + blueAdjustment));
+    }
+
+    static void applyComponentsColours() {
+
+        monthJComboBox.setBackground(componentsColour3);
+        yearJComboBox.setBackground(componentsColour3);
+        for (int i = 0; i < 7; i++) {
+            headerJTextAreas[i].setBackground(componentsColour2);
+        }
+        YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
+        int lengthOfMonth = yearMonth.lengthOfMonth();
+        GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
+        int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
+        for (int i = 0; i < 7; i++) {
+            for (int j = 0; j < 6; j++) {
+                int date = i + j * 7 - offset;
+                if (date >= 1 && date <= lengthOfMonth) {
+                    calendarBoxesJTextAreas[j][i][0].setBackground(componentsColour4);
+                    calendarBoxesJTextAreas[j][i][1].setBackground(componentsColour4);
+                } else {
+                    calendarBoxesJTextAreas[j][i][0].setBackground(componentsColour1);
+                    calendarBoxesJTextAreas[j][i][1].setBackground(componentsColour1);
+                }
+            }
+        }
+        dayToCopyJComboBox.setBackground(componentsColour3);
+        copiesJCheckBox.setBackground(componentsColour3);
+        copiesJLabel.setBackground(componentsColour3);
+        copiesJTextField.setBackground(componentsColour4);
+        weeksIntervalJCheckBox.setBackground(componentsColour3);
+        weeksIntervalJLabel.setBackground(componentsColour3);
+        weeksIntervalJTextField.setBackground(componentsColour4);
+
     }
 
     @Override

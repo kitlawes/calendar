@@ -5,5 +5,6 @@ public class JComboBoxItemListener implements ItemListener {
     @Override
     public void itemStateChanged(ItemEvent event) {
         Calendar.updateCalendarBoxes();
+        Calendar.applyComponentsColours();
     }
 }
