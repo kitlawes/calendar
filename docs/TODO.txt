@@ -12,7 +12,7 @@ DONE - Add clear calendar button to clear the contents of all calendar boxes
 DONE - Add clear month button to clear the contents of all calendar boxes for the current month
 DONE - Add clear year button to clear the contents of all calendar boxes for the current year
 DONE - Add controls to copy the contents of a calendar box to all future calendar boxes with the same day of the week
-- Allow the user to specify an upper bound on the number of calendar boxes to copy to
+DONE - Allow the user to specify an upper bound on the number of calendar boxes to copy to
 - Allow the user to specify an interval as an number of weeks between calendar boxes to copy to
 - Add controls to change the colour scheme of the GUI
 - Implement a view for showing just one week instead of a whole month and add controls for switching between the views

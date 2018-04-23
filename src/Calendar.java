@@ -19,6 +19,9 @@ public class Calendar extends JFrame {
     static JButton clearCalendarJButton;
     static JButton copyDayJButton;
     static JComboBox dayToCopyJComboBox;
+    static JCheckBox copiesJCheckBox;
+    static JLabel copiesJLabel;
+    static JTextField copiesJTextField;
     static final String filename = "calendar_boxes_contents.ser";
     static boolean calendarBoxesContentsLocked;
 
@@ -130,6 +133,26 @@ public class Calendar extends JFrame {
         dayToCopyJComboBox.setFont(dayToCopyJComboBox.getFont().deriveFont(7f));
         calendar.add(dayToCopyJComboBox);
 
+        copiesJCheckBox = new JCheckBox();
+        copiesJCheckBox.setSelected(false);
+        JCheckBoxItemListener jCheckBoxItemListener = new JCheckBoxItemListener();
+        copiesJCheckBox.addItemListener(jCheckBoxItemListener);
+        calendar.add(copiesJCheckBox);
+
+        copiesJLabel = new JLabel();
+        copiesJLabel.setText("COPIES:");
+        copiesJLabel.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        copiesJLabel.setFont(copiesJLabel.getFont().deriveFont(7f));
+        copiesJLabel.setHorizontalAlignment(SwingConstants.RIGHT);
+        copiesJLabel.setEnabled(false);
+        calendar.add(copiesJLabel);
+
+        copiesJTextField = new JTextField();
+        copiesJTextField.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        copiesJTextField.setFont(copiesJTextField.getFont().deriveFont(7f));
+        copiesJTextField.setEnabled(false);
+        calendar.add(copiesJTextField);
+
         setComponentsSizeAndLocation();
 
         File file = new File(filename);
@@ -227,7 +250,7 @@ public class Calendar extends JFrame {
     static void setComponentsSizeAndLocation() {
 
         double componentWidth = (double) (calendar.getSize().width - 17) / 42;
-        double componentHeight = (double) (calendar.getSize().height - 40) / 10;
+        double componentHeight = (double) (calendar.getSize().height - 40) / 11;
 
         monthJComboBox.setSize((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight));
         monthJComboBox.setLocation(0, 0);
@@ -271,6 +294,18 @@ public class Calendar extends JFrame {
         dayToCopyJComboBox.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 21),
                 (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
         dayToCopyJComboBox.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight * 9));
+
+        copiesJCheckBox.setSize(21,
+                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10) - 2);
+        copiesJCheckBox.setLocation(1, (int) Math.round(componentHeight * 10) + 1);
+
+        copiesJLabel.setSize((int) Math.round(componentWidth * 14),
+                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
+        copiesJLabel.setLocation(0, (int) Math.round(componentHeight * 10));
+
+        copiesJTextField.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 14),
+                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
+        copiesJTextField.setLocation((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 10));
 
     }
 
@@ -334,17 +369,30 @@ public class Calendar extends JFrame {
         int weekToCopyFrom = gregorianCalendar.get(GregorianCalendar.WEEK_OF_MONTH) - 1;
         int monthToCopyFrom = gregorianCalendar.get(GregorianCalendar.MONTH);
         int yearToCopyFrom = yearJComboBox.getSelectedIndex();
+        Integer copies = null;
+        try {
+            copies = Integer.parseInt(copiesJTextField.getText());
+        } catch(NumberFormatException e) {
+        } catch(NullPointerException e) {
+        }
+        YEAR_LOOP:
         for (int i = yearToCopyFrom; i < 21; i++) {
             int earliestMonthToCopyFrom = i == yearToCopyFrom ? monthToCopyFrom : 0;
             for (int j = earliestMonthToCopyFrom; j < 12; j++) {
                 int earliestWeekToCopyFrom = i == yearToCopyFrom && j == earliestMonthToCopyFrom ? weekToCopyFrom : 0;
-                for (int k = earliestWeekToCopyFrom; k < 6; k++) {
+                for (int k = earliestWeekToCopyFrom + 1; k < 6; k++) {
                     YearMonth yearMonth = YearMonth.of(2008 + i, j + 1);
                     int lengthOfMonth = yearMonth.lengthOfMonth();
                     gregorianCalendar = new GregorianCalendar(2008 + i, j, 1);
                     int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
                     int date = dayToCopyFrom + k * 7 - offset;
                     if (date >= 1 && date <= lengthOfMonth) {
+                        if (copiesJCheckBox.isSelected() && copies != null) {
+                            if (copies <= 0) {
+                                break YEAR_LOOP;
+                            }
+                            copies--;
+                        }
                         calendarBoxesContents[i][j][k][dayToCopyFrom][1]
                                 = calendarBoxesContents[yearToCopyFrom][monthToCopyFrom][weekToCopyFrom][dayToCopyFrom][1];
                     }
@@ -352,6 +400,11 @@ public class Calendar extends JFrame {
             }
         }
 
+    }
+
+    static void setWhetherComponentsAreEnabled() {
+        copiesJLabel.setEnabled(copiesJCheckBox.isSelected());
+        copiesJTextField.setEnabled(copiesJCheckBox.isSelected());
     }
 
     @Override
