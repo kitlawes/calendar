@@ -28,12 +28,10 @@ public class Calendar extends JFrame {
     static JTextField weeksIntervalJTextField;
     static JButton defaultColoursJButton;
     static JButton randomColoursJButton;
-    static final String filename = "calendar_boxes_contents.ser";
+    static final String calendarBoxesContentsFilename = "calendar_boxes_contents.ser";
+    static final String componentsColoursFilename = "components_colours.ser";
     static boolean calendarBoxesContentsLocked;
-    static Color componentsColour1;
-    static Color componentsColour2;
-    static Color componentsColour3;
-    static Color componentsColour4;
+    static Color[] componentsColours;
 
     public static void main(String[] args) {
         calendar = new Calendar();
@@ -198,10 +196,8 @@ public class Calendar extends JFrame {
         calendar.add(randomColoursJButton);
 
         setComponentsSizeAndLocation();
-        setComponentsColours(false);
-        applyComponentsColours();
 
-        File file = new File(filename);
+        File file = new File(calendarBoxesContentsFilename);
         if (file.exists()) {
 
             try {
@@ -241,6 +237,22 @@ public class Calendar extends JFrame {
 
         updateCalendarBoxes();
 
+        file = new File(componentsColoursFilename);
+        if (file.exists()) {
+            try {
+                ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file));
+                componentsColours = (Color[]) objectInputStream.readObject();
+                objectInputStream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+            }
+        } else {
+            setComponentsColours(false);
+        }
+        applyComponentsColours();
+
         calendar.setVisible(true);
 
     }
@@ -278,7 +290,7 @@ public class Calendar extends JFrame {
             }
 
             try {
-                ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(filename));
+                ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(calendarBoxesContentsFilename));
                 objectOutputStream.writeObject(calendarBoxesContents);
                 objectOutputStream.close();
             } catch (IOException e) {
@@ -483,6 +495,7 @@ public class Calendar extends JFrame {
     }
 
     static void setComponentsColours(boolean randomColours) {
+
         int redAdjustment = 0;
         int greenAdjustment = 0;
         int blueAdjustment = 0;
@@ -492,18 +505,28 @@ public class Calendar extends JFrame {
             greenAdjustment = random.nextInt(101) - 50;
             blueAdjustment = random.nextInt(101) - 50;
         }
-        componentsColour1 = new Color(128 + redAdjustment, 128 + greenAdjustment, 128 + blueAdjustment);
-        componentsColour2 = new Color(Math.min(255, 192 + redAdjustment), Math.min(255, 192 + greenAdjustment), Math.min(255, 192 + blueAdjustment));
-        componentsColour3 = new Color(Math.min(255, 238 + redAdjustment), Math.min(255, 238 + greenAdjustment), Math.min(255, 238 + blueAdjustment));
-        componentsColour4 = new Color(Math.min(255, 255 + redAdjustment), Math.min(255, 255 + greenAdjustment), Math.min(255, 255 + blueAdjustment));
+        componentsColours = new Color[4];
+        componentsColours[0] = new Color(128 + redAdjustment, 128 + greenAdjustment, 128 + blueAdjustment);
+        componentsColours[1] = new Color(Math.min(255, 192 + redAdjustment), Math.min(255, 192 + greenAdjustment), Math.min(255, 192 + blueAdjustment));
+        componentsColours[2] = new Color(Math.min(255, 238 + redAdjustment), Math.min(255, 238 + greenAdjustment), Math.min(255, 238 + blueAdjustment));
+        componentsColours[3] = new Color(Math.min(255, 255 + redAdjustment), Math.min(255, 255 + greenAdjustment), Math.min(255, 255 + blueAdjustment));
+
+        try {
+            ObjectOutputStream objectOutputStream = new ObjectOutputStream(new FileOutputStream(componentsColoursFilename));
+            objectOutputStream.writeObject(componentsColours);
+            objectOutputStream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     static void applyComponentsColours() {
 
-        monthJComboBox.setBackground(componentsColour3);
-        yearJComboBox.setBackground(componentsColour3);
+        monthJComboBox.setBackground(componentsColours[2]);
+        yearJComboBox.setBackground(componentsColours[2]);
         for (int i = 0; i < 7; i++) {
-            headerJTextAreas[i].setBackground(componentsColour2);
+            headerJTextAreas[i].setBackground(componentsColours[1]);
         }
         YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
         int lengthOfMonth = yearMonth.lengthOfMonth();
@@ -513,21 +536,21 @@ public class Calendar extends JFrame {
             for (int j = 0; j < 6; j++) {
                 int date = i + j * 7 - offset;
                 if (date >= 1 && date <= lengthOfMonth) {
-                    calendarBoxesJTextAreas[j][i][0].setBackground(componentsColour4);
-                    calendarBoxesJTextAreas[j][i][1].setBackground(componentsColour4);
+                    calendarBoxesJTextAreas[j][i][0].setBackground(componentsColours[3]);
+                    calendarBoxesJTextAreas[j][i][1].setBackground(componentsColours[3]);
                 } else {
-                    calendarBoxesJTextAreas[j][i][0].setBackground(componentsColour1);
-                    calendarBoxesJTextAreas[j][i][1].setBackground(componentsColour1);
+                    calendarBoxesJTextAreas[j][i][0].setBackground(componentsColours[0]);
+                    calendarBoxesJTextAreas[j][i][1].setBackground(componentsColours[0]);
                 }
             }
         }
-        dayToCopyJComboBox.setBackground(componentsColour3);
-        copiesJCheckBox.setBackground(componentsColour3);
-        copiesJLabel.setBackground(componentsColour3);
-        copiesJTextField.setBackground(componentsColour4);
-        weeksIntervalJCheckBox.setBackground(componentsColour3);
-        weeksIntervalJLabel.setBackground(componentsColour3);
-        weeksIntervalJTextField.setBackground(componentsColour4);
+        dayToCopyJComboBox.setBackground(componentsColours[2]);
+        copiesJCheckBox.setBackground(componentsColours[2]);
+        copiesJLabel.setBackground(componentsColours[2]);
+        copiesJTextField.setBackground(componentsColours[3]);
+        weeksIntervalJCheckBox.setBackground(componentsColours[2]);
+        weeksIntervalJLabel.setBackground(componentsColours[2]);
+        weeksIntervalJTextField.setBackground(componentsColours[3]);
 
     }
 
