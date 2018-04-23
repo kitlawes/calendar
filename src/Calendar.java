@@ -486,12 +486,14 @@ public class Calendar extends JFrame {
     }
 
     static void setWhetherComponentsAreEnabled() {
+
         copiesJLabel.setEnabled(copiesJCheckBox.isSelected());
         copiesJTextField.setEnabled(copiesJCheckBox.isSelected());
         weeksIntervalJLabel.setEnabled(weeksIntervalJCheckBox.isSelected());
         weeksIntervalJTextField.setEnabled(weeksIntervalJCheckBox.isSelected());
-        copiesJCheckBox.revalidate();
-        weeksIntervalJCheckBox.revalidate();
+
+        calendar.repaint();
+
     }
 
     static void setComponentsColours(boolean randomColours) {
@@ -551,6 +553,8 @@ public class Calendar extends JFrame {
         weeksIntervalJCheckBox.setBackground(componentsColours[2]);
         weeksIntervalJLabel.setBackground(componentsColours[2]);
         weeksIntervalJTextField.setBackground(componentsColours[3]);
+
+        calendar.repaint();
 
     }
 
