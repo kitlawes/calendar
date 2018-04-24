@@ -1,20 +1,27 @@
 import javax.swing.*;
 import java.awt.*;
 import java.io.*;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.time.DayOfWeek;
 import java.time.Month;
 import java.time.YearMonth;
+import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Random;
 
 public class Calendar extends JFrame {
 
     static Calendar calendar;
+
+    static JComboBox viewJComboBox;
+    static JComboBox weekJComboBox;
     static JComboBox monthJComboBox;
     static JComboBox yearJComboBox;
     static JTextArea[] headerJTextAreas;
-    static JTextArea[][][] calendarBoxesJTextAreas;
-    static String[][][][][] calendarBoxesContents;
+    static JTextArea[][][] monthViewCalendarBoxesJTextAreas;
+    static JTextArea[][] weekViewCalendarBoxesJTextAreas;
+    static JButton clearWeekJButton;
     static JButton clearMonthJButton;
     static JButton clearYearJButton;
     static JButton clearCalendarJButton;
@@ -28,10 +35,12 @@ public class Calendar extends JFrame {
     static JTextField weeksIntervalJTextField;
     static JButton defaultColoursJButton;
     static JButton randomColoursJButton;
+
+    static String[][][] calendarBoxesContents;
+    static Color[] componentsColours;
     static final String calendarBoxesContentsFilename = "calendar_boxes_contents.ser";
     static final String componentsColoursFilename = "components_colours.ser";
-    static boolean calendarBoxesContentsLocked;
-    static Color[] componentsColours;
+    static boolean listenersActive;
 
     public static void main(String[] args) {
         calendar = new Calendar();
@@ -50,6 +59,15 @@ public class Calendar extends JFrame {
         JFrameComponentAdapter jFrameComponentAdapter = new JFrameComponentAdapter();
         calendar.addComponentListener(jFrameComponentAdapter);
 
+        viewJComboBox = new JComboBox();
+        viewJComboBox.addItem("MONTH VIEW");
+        viewJComboBox.addItem("WEEK VIEW");
+        viewJComboBox.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        viewJComboBox.setFont(viewJComboBox.getFont().deriveFont(7f));
+        JComboBoxItemListener jComboBoxItemListener = new JComboBoxItemListener();
+        viewJComboBox.addItemListener(jComboBoxItemListener);
+        calendar.add(viewJComboBox);
+
         monthJComboBox = new JComboBox();
         for (int i = 0; i < 12; i++) {
             monthJComboBox.addItem(Month.of(i + 1));
@@ -58,9 +76,14 @@ public class Calendar extends JFrame {
         monthJComboBox.setSelectedIndex(gregorianCalendar.get(GregorianCalendar.MONTH));
         monthJComboBox.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
         monthJComboBox.setFont(monthJComboBox.getFont().deriveFont(7f));
-        JComboBoxItemListener jComboBoxItemListener = new JComboBoxItemListener();
         monthJComboBox.addItemListener(jComboBoxItemListener);
         calendar.add(monthJComboBox);
+
+        weekJComboBox = new JComboBox();
+        weekJComboBox.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        weekJComboBox.setFont(weekJComboBox.getFont().deriveFont(7f));
+        weekJComboBox.addItemListener(jComboBoxItemListener);
+        calendar.add(weekJComboBox);
 
         yearJComboBox = new JComboBox();
         for (int i = 0; i < 21; i++) {
@@ -84,28 +107,50 @@ public class Calendar extends JFrame {
         }
 
         JTextAreaDocumentListener jTextAreaDocumentListener = new JTextAreaDocumentListener();
-        calendarBoxesJTextAreas = new JTextArea[6][7][2];
+        monthViewCalendarBoxesJTextAreas = new JTextArea[6][7][2];
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 6; j++) {
                 JTextArea jTextArea = new JTextArea();
                 jTextArea.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
                 jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
                 calendar.add(jTextArea);
-                calendarBoxesJTextAreas[j][i][0] = jTextArea;
+                monthViewCalendarBoxesJTextAreas[j][i][0] = jTextArea;
                 jTextArea = new JTextArea();
                 jTextArea.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.BLACK));
                 jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
                 jTextArea.getDocument().addDocumentListener(jTextAreaDocumentListener);
                 calendar.add(jTextArea);
-                calendarBoxesJTextAreas[j][i][1] = jTextArea;
+                monthViewCalendarBoxesJTextAreas[j][i][1] = jTextArea;
             }
         }
+
+        weekViewCalendarBoxesJTextAreas = new JTextArea[7][2];
+        for (int i = 0; i < 7; i++) {
+            JTextArea jTextArea = new JTextArea();
+            jTextArea.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+            jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
+            calendar.add(jTextArea);
+            weekViewCalendarBoxesJTextAreas[i][0] = jTextArea;
+            jTextArea = new JTextArea();
+            jTextArea.setBorder(BorderFactory.createMatteBorder(0, 1, 0, 0, Color.BLACK));
+            jTextArea.setFont(jTextArea.getFont().deriveFont(7f));
+            jTextArea.getDocument().addDocumentListener(jTextAreaDocumentListener);
+            calendar.add(jTextArea);
+            weekViewCalendarBoxesJTextAreas[i][1] = jTextArea;
+        }
+
+        clearWeekJButton = new JButton();
+        clearWeekJButton.setText("CLEAR WEEK");
+        clearWeekJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
+        clearWeekJButton.setFont(clearWeekJButton.getFont().deriveFont(7f));
+        JButtonActionListener jButtonActionListener = new JButtonActionListener();
+        clearWeekJButton.addActionListener(jButtonActionListener);
+        calendar.add(clearWeekJButton);
 
         clearMonthJButton = new JButton();
         clearMonthJButton.setText("CLEAR MONTH");
         clearMonthJButton.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
         clearMonthJButton.setFont(clearMonthJButton.getFont().deriveFont(7f));
-        JButtonActionListener jButtonActionListener = new JButtonActionListener();
         clearMonthJButton.addActionListener(jButtonActionListener);
         calendar.add(clearMonthJButton);
 
@@ -131,11 +176,6 @@ public class Calendar extends JFrame {
         calendar.add(copyDayJButton);
 
         dayToCopyJComboBox = new JComboBox();
-        YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
-        int lengthOfMonth = yearMonth.lengthOfMonth();
-        for (int i = 0; i < lengthOfMonth; i++) {
-            dayToCopyJComboBox.addItem(i + 1);
-        }
         dayToCopyJComboBox.setBorder(BorderFactory.createMatteBorder(1, 1, 0, 0, Color.BLACK));
         dayToCopyJComboBox.setFont(dayToCopyJComboBox.getFont().deriveFont(7f));
         calendar.add(dayToCopyJComboBox);
@@ -195,6 +235,9 @@ public class Calendar extends JFrame {
         randomColoursJButton.addActionListener(jButtonActionListener);
         calendar.add(randomColoursJButton);
 
+        listenersActive = true;
+        updateViewComponents();
+        updateCopyComponents();
         setComponentsSizeAndLocation();
 
         File file = new File(calendarBoxesContentsFilename);
@@ -202,7 +245,7 @@ public class Calendar extends JFrame {
 
             try {
                 ObjectInputStream objectInputStream = new ObjectInputStream(new FileInputStream(file));
-                calendarBoxesContents = (String[][][][][]) objectInputStream.readObject();
+                calendarBoxesContents = (String[][][]) objectInputStream.readObject();
                 objectInputStream.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -212,23 +255,11 @@ public class Calendar extends JFrame {
 
         } else {
 
-            calendarBoxesContents = new String[21][12][6][7][2];
+            calendarBoxesContents = new String[21][12][31];
             for (int i = 0; i < 21; i++) {
                 for (int j = 0; j < 12; j++) {
-                    yearMonth = YearMonth.of(2008 + i, j + 1);
-                    lengthOfMonth = yearMonth.lengthOfMonth();
-                    gregorianCalendar = new GregorianCalendar(2008 + i, j, 1);
-                    int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
-                    for (int k = 0; k < 6; k++) {
-                        for (int l = 0; l < 7; l++) {
-                            int date = l + k * 7 - offset;
-                            if (date >= 1 && date <= lengthOfMonth) {
-                                calendarBoxesContents[i][j][k][l][0] = String.valueOf(date);
-                            } else {
-                                calendarBoxesContents[i][j][k][l][0] = "";
-                            }
-                            calendarBoxesContents[i][j][k][l][1] = "";
-                        }
+                    for (int k = 0; k < 31; k++) {
+                        calendarBoxesContents[i][j][k] = "";
                     }
                 }
             }
@@ -257,35 +288,218 @@ public class Calendar extends JFrame {
 
     }
 
-    static void updateCalendarBoxes() {
-        calendarBoxesContentsLocked = true;
-        YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
-        int lengthOfMonth = yearMonth.lengthOfMonth();
-        GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
-        int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
-        for (int i = 0; i < 7; i++) {
-            for (int j = 0; j < 6; j++) {
-                calendarBoxesJTextAreas[j][i][0].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][0]);
-                calendarBoxesJTextAreas[j][i][1].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][1]);
-                calendarBoxesJTextAreas[j][i][0].setEditable(false);
-                int date = i + j * 7 - offset;
-                if (date >= 1 && date <= lengthOfMonth) {
-                    calendarBoxesJTextAreas[j][i][1].setEditable(true);
-                } else {
-                    calendarBoxesJTextAreas[j][i][1].setEditable(false);
+    static void updateViewComponents() {
+
+        if (listenersActive) {
+            listenersActive = false;
+
+            if (viewJComboBox.getSelectedItem().equals("MONTH VIEW")) {
+
+                weekJComboBox.setVisible(false);
+                monthJComboBox.setVisible(true);
+                for (int i = 0; i < 7; i++) {
+                    for (int j = 0; j < 6; j++) {
+                        monthViewCalendarBoxesJTextAreas[j][i][0].setVisible(true);
+                        monthViewCalendarBoxesJTextAreas[j][i][1].setVisible(true);
+                    }
+                }
+                for (int i = 0; i < 7; i++) {
+                    weekViewCalendarBoxesJTextAreas[i][0].setVisible(false);
+                    weekViewCalendarBoxesJTextAreas[i][1].setVisible(false);
+                }
+                clearWeekJButton.setVisible(false);
+                clearMonthJButton.setVisible(true);
+
+            }
+
+            if (viewJComboBox.getSelectedItem().equals("WEEK VIEW")) {
+
+                weekJComboBox.removeAllItems();
+                GregorianCalendar weekStart = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), 0, 1);
+                GregorianCalendar weekEnd = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), 0, (8 - weekStart.get(GregorianCalendar.DAY_OF_WEEK)) % 7 + 1);
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                while (weekEnd.get(GregorianCalendar.YEAR) == (int) yearJComboBox.getSelectedItem()) {
+                    weekJComboBox.addItem(simpleDateFormat.format(weekStart.getTime()) + " - " + simpleDateFormat.format(weekEnd.getTime()));
+                    weekStart = (GregorianCalendar) weekEnd.clone();
+                    weekStart.add(GregorianCalendar.DAY_OF_MONTH, 1);
+                    weekEnd.add(GregorianCalendar.DAY_OF_MONTH, 7);
+                }
+                if (weekStart.get(GregorianCalendar.YEAR) == (int) yearJComboBox.getSelectedItem()) {
+                    weekEnd = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), 11, 31);
+                    weekJComboBox.addItem(simpleDateFormat.format(weekStart.getTime()) + " - " + simpleDateFormat.format(weekEnd.getTime()));
+                }
+
+                weekJComboBox.setVisible(true);
+                monthJComboBox.setVisible(false);
+                for (int i = 0; i < 7; i++) {
+                    for (int j = 0; j < 6; j++) {
+                        monthViewCalendarBoxesJTextAreas[j][i][0].setVisible(false);
+                        monthViewCalendarBoxesJTextAreas[j][i][1].setVisible(false);
+                    }
+                }
+                for (int i = 0; i < 7; i++) {
+                    weekViewCalendarBoxesJTextAreas[i][0].setVisible(true);
+                    weekViewCalendarBoxesJTextAreas[i][1].setVisible(true);
+                }
+                clearWeekJButton.setVisible(true);
+                clearMonthJButton.setVisible(false);
+
+            }
+
+            listenersActive = true;
+        }
+
+    }
+
+    static void updateCopyComponents() {
+
+        if (listenersActive) {
+            listenersActive = false;
+
+            if (viewJComboBox.getSelectedItem().equals("MONTH VIEW")) {
+                dayToCopyJComboBox.removeAllItems();
+                YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
+                int lengthOfMonth = yearMonth.lengthOfMonth();
+                for (int i = 0; i < lengthOfMonth; i++) {
+                    dayToCopyJComboBox.addItem(i + 1);
                 }
             }
+
+            if (viewJComboBox.getSelectedItem().equals("WEEK VIEW")) {
+                dayToCopyJComboBox.removeAllItems();
+                Date date = null;
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                try {
+                    date = simpleDateFormat.parse(((String) weekJComboBox.getSelectedItem()).substring(0, 10));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                GregorianCalendar weekStart = new GregorianCalendar();
+                weekStart.setTime(date);
+                try {
+                    date = simpleDateFormat.parse(((String) weekJComboBox.getSelectedItem()).substring(13, 23));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                GregorianCalendar weekEnd = new GregorianCalendar();
+                weekEnd.setTime(date);
+                dayToCopyJComboBox.addItem(weekStart.get(GregorianCalendar.DAY_OF_MONTH));
+                while (!weekStart.equals(weekEnd)) {
+                    weekStart.add(GregorianCalendar.DAY_OF_MONTH, 1);
+                    dayToCopyJComboBox.addItem(weekStart.get(GregorianCalendar.DAY_OF_MONTH));
+                }
+            }
+
+            listenersActive = true;
         }
-        calendarBoxesContentsLocked = false;
+
+    }
+
+    static void updateCalendarBoxes() {
+
+        if (listenersActive) {
+            listenersActive = false;
+
+            if (viewJComboBox.getSelectedItem().equals("MONTH VIEW")) {
+                YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
+                int lengthOfMonth = yearMonth.lengthOfMonth();
+                GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
+                int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
+                for (int i = 0; i < 7; i++) {
+                    for (int j = 0; j < 6; j++) {
+                        int date = i + j * 7 - offset;
+                        if (date >= 1 && date <= lengthOfMonth) {
+                            monthViewCalendarBoxesJTextAreas[j][i][0].setText(String.valueOf(date));
+                            monthViewCalendarBoxesJTextAreas[j][i][0].setEditable(false);
+                            monthViewCalendarBoxesJTextAreas[j][i][1].setText(calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][date - 1]);
+                            monthViewCalendarBoxesJTextAreas[j][i][1].setEditable(true);
+                        } else {
+                            monthViewCalendarBoxesJTextAreas[j][i][0].setText("");
+                            monthViewCalendarBoxesJTextAreas[j][i][0].setEditable(false);
+                            monthViewCalendarBoxesJTextAreas[j][i][1].setText("");
+                            monthViewCalendarBoxesJTextAreas[j][i][1].setEditable(false);
+                        }
+                    }
+                }
+            }
+
+            if (viewJComboBox.getSelectedItem().equals("WEEK VIEW")) {
+                Date date = null;
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                try {
+                    date = simpleDateFormat.parse(((String) weekJComboBox.getSelectedItem()).substring(0, 10));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                GregorianCalendar gregorianCalendar = new GregorianCalendar();
+                gregorianCalendar.setTime(date);
+                int year = gregorianCalendar.get(GregorianCalendar.YEAR);
+                gregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, -((gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7));
+                for (int i = 0; i < 7; i++) {
+                    if (gregorianCalendar.get(GregorianCalendar.YEAR) == year) {
+                        weekViewCalendarBoxesJTextAreas[i][0].setText(String.valueOf(gregorianCalendar.get(GregorianCalendar.DAY_OF_MONTH)));
+                        weekViewCalendarBoxesJTextAreas[i][0].setEditable(false);
+                        weekViewCalendarBoxesJTextAreas[i][1].setText(calendarBoxesContents
+                                [gregorianCalendar.get(GregorianCalendar.YEAR) - 2008]
+                                [gregorianCalendar.get(GregorianCalendar.MONTH)]
+                                [gregorianCalendar.get(GregorianCalendar.DAY_OF_MONTH) - 1]);
+                        weekViewCalendarBoxesJTextAreas[i][1].setEditable(true);
+                    } else {
+                        weekViewCalendarBoxesJTextAreas[i][0].setText("");
+                        weekViewCalendarBoxesJTextAreas[i][0].setEditable(false);
+                        weekViewCalendarBoxesJTextAreas[i][1].setText("");
+                        weekViewCalendarBoxesJTextAreas[i][1].setEditable(false);
+                    }
+                    gregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, 1);
+                }
+            }
+
+            listenersActive = true;
+        }
+
     }
 
     static void saveCalendarBoxesContents() {
-        if (!calendarBoxesContentsLocked) {
 
-            for (int i = 0; i < 7; i++) {
-                for (int j = 0; j < 6; j++) {
-                    calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][0] = calendarBoxesJTextAreas[j][i][0].getText();
-                    calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][j][i][1] = calendarBoxesJTextAreas[j][i][1].getText();
+        if (listenersActive) {
+            listenersActive = false;
+
+            if (viewJComboBox.getSelectedItem().equals("MONTH VIEW")) {
+                YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
+                int lengthOfMonth = yearMonth.lengthOfMonth();
+                GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
+                int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
+                for (int i = 0; i < 7; i++) {
+                    for (int j = 0; j < 6; j++) {
+                        int date = i + j * 7 - offset;
+                        if (date >= 1 && date <= lengthOfMonth) {
+                            calendarBoxesContents[yearJComboBox.getSelectedIndex()][monthJComboBox.getSelectedIndex()][date - 1] = monthViewCalendarBoxesJTextAreas[j][i][1].getText();
+                        }
+                    }
+                }
+            }
+
+            if (viewJComboBox.getSelectedItem().equals("WEEK VIEW")) {
+                Date date = null;
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                try {
+                    date = simpleDateFormat.parse(((String) weekJComboBox.getSelectedItem()).substring(0, 10));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                GregorianCalendar gregorianCalendar = new GregorianCalendar();
+                gregorianCalendar.setTime(date);
+                int year = gregorianCalendar.get(GregorianCalendar.YEAR);
+                gregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, -((gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7));
+                for (int i = 0; i < 7; i++) {
+                    if (gregorianCalendar.get(GregorianCalendar.YEAR) == year) {
+                        calendarBoxesContents
+                                [gregorianCalendar.get(GregorianCalendar.YEAR) - 2008]
+                                [gregorianCalendar.get(GregorianCalendar.MONTH)]
+                                [gregorianCalendar.get(GregorianCalendar.DAY_OF_MONTH) - 1]
+                                = weekViewCalendarBoxesJTextAreas[i][1].getText();
+                    }
+                    gregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, 1);
                 }
             }
 
@@ -297,79 +511,101 @@ public class Calendar extends JFrame {
                 e.printStackTrace();
             }
 
+            listenersActive = true;
         }
+
     }
 
     static void setComponentsSizeAndLocation() {
 
         double componentWidth = (double) (calendar.getSize().width - 17) / 42;
-        double componentHeight = (double) (calendar.getSize().height - 40) / 12;
+        double componentHeight = (double) (calendar.getSize().height - 40) / 13;
 
-        monthJComboBox.setSize((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight));
-        monthJComboBox.setLocation(0, 0);
-        yearJComboBox.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 21), (int) Math.round(componentHeight));
-        yearJComboBox.setLocation((int) Math.round(componentWidth * 21), 0);
+        viewJComboBox.setSize((int) Math.round(componentWidth * 42), (int) Math.round(componentHeight));
+        viewJComboBox.setLocation(0, 0);
+
+        weekJComboBox.setSize((int) Math.round(componentWidth * 21),
+                (int) Math.round(componentHeight * 2) - (int) Math.round(componentHeight));
+        weekJComboBox.setLocation(0, (int) Math.round(componentHeight));
+        monthJComboBox.setSize((int) Math.round(componentWidth * 21),
+                (int) Math.round(componentHeight * 2) - (int) Math.round(componentHeight));
+        monthJComboBox.setLocation(0, (int) Math.round(componentHeight));
+        yearJComboBox.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 21),
+                (int) Math.round(componentHeight * 2) - (int) Math.round(componentHeight));
+        yearJComboBox.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight));
 
         for (int i = 0; i < 7; i++) {
             headerJTextAreas[i].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
-                    (int) Math.round(componentHeight * 2) - (int) Math.round(componentHeight));
-            headerJTextAreas[i].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight));
+                    (int) Math.round(componentHeight * 3) - (int) Math.round(componentHeight * 2));
+            headerJTextAreas[i].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight * 2));
         }
 
         for (int i = 0; i < 7; i++) {
             for (int j = 0; j < 6; j++) {
-                calendarBoxesJTextAreas[j][i][0].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
-                        (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2) - (int) Math.round(componentHeight * 2 + componentHeight * j));
-                calendarBoxesJTextAreas[j][i][1].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
-                        (int) Math.round(componentHeight * 2 + componentHeight * (j + 1)) - (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2));
-                calendarBoxesJTextAreas[j][i][0].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight * 2 + componentHeight * j));
-                calendarBoxesJTextAreas[j][i][1].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight * 2 + componentHeight * j + componentHeight / 2));
+                monthViewCalendarBoxesJTextAreas[j][i][0].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
+                        (int) Math.round(componentHeight * 3 + componentHeight * j + componentHeight / 2) - (int) Math.round(componentHeight * 3 + componentHeight * j));
+                monthViewCalendarBoxesJTextAreas[j][i][0].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight * 3 + componentHeight * j));
+                monthViewCalendarBoxesJTextAreas[j][i][1].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
+                        (int) Math.round(componentHeight * 3 + componentHeight * (j + 1)) - (int) Math.round(componentHeight * 3 + componentHeight * j + componentHeight / 2));
+                monthViewCalendarBoxesJTextAreas[j][i][1].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight * 3 + componentHeight * j + componentHeight / 2));
             }
         }
 
+        for (int i = 0; i < 7; i++) {
+            weekViewCalendarBoxesJTextAreas[i][0].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
+                    (int) Math.round(componentHeight * 3 + componentHeight / 2) - (int) Math.round(componentHeight * 3));
+            weekViewCalendarBoxesJTextAreas[i][0].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight * 3));
+            weekViewCalendarBoxesJTextAreas[i][1].setSize((int) Math.round(componentWidth * 6 * (i + 1)) - (int) Math.round(componentWidth * 6 * i),
+                    (int) Math.round(componentHeight * 3 + componentHeight * 6) - (int) Math.round(componentHeight * 3 + componentHeight / 2));
+            weekViewCalendarBoxesJTextAreas[i][1].setLocation((int) Math.round(componentWidth * 6 * i), (int) Math.round(componentHeight * 3 + componentHeight / 2));
+        }
+
+        clearWeekJButton.setSize((int) Math.round(componentWidth * 14),
+                (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
+        clearWeekJButton.setLocation(0, (int) Math.round(componentHeight * 9));
         clearMonthJButton.setSize((int) Math.round(componentWidth * 14),
-                (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
-        clearMonthJButton.setLocation(0, (int) Math.round(componentHeight * 8));
+                (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
+        clearMonthJButton.setLocation(0, (int) Math.round(componentHeight * 9));
         clearYearJButton.setSize((int) Math.round(componentWidth * 28) - (int) Math.round(componentWidth * 14),
-                (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
-        clearYearJButton.setLocation((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 8));
+                (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
+        clearYearJButton.setLocation((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 9));
         clearCalendarJButton.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 28),
-                (int) Math.round(componentHeight * 9) - (int) Math.round(componentHeight * 8));
-        clearCalendarJButton.setLocation((int) Math.round(componentWidth * 28), (int) Math.round(componentHeight * 8));
+                (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
+        clearCalendarJButton.setLocation((int) Math.round(componentWidth * 28), (int) Math.round(componentHeight * 9));
 
         copyDayJButton.setSize((int) Math.round(componentWidth * 21),
-                (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
-        copyDayJButton.setLocation(0, (int) Math.round(componentHeight * 9));
+                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
+        copyDayJButton.setLocation(0, (int) Math.round(componentHeight * 10));
         dayToCopyJComboBox.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 21),
-                (int) Math.round(componentHeight * 10) - (int) Math.round(componentHeight * 9));
-        dayToCopyJComboBox.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight * 9));
+                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
+        dayToCopyJComboBox.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight * 10));
 
         copiesJCheckBox.setSize(21,
-                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10) - 2);
-        copiesJCheckBox.setLocation(1, (int) Math.round(componentHeight * 10) + 1);
+                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11) - 2);
+        copiesJCheckBox.setLocation(1, (int) Math.round(componentHeight * 11) + 1);
         copiesJLabel.setSize((int) Math.round(componentWidth * 14),
-                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
-        copiesJLabel.setLocation(0, (int) Math.round(componentHeight * 10));
+                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11));
+        copiesJLabel.setLocation(0, (int) Math.round(componentHeight * 11));
         copiesJTextField.setSize((int) Math.round(componentWidth * 21) - (int) Math.round(componentWidth * 14),
-                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
-        copiesJTextField.setLocation((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 10));
+                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11));
+        copiesJTextField.setLocation((int) Math.round(componentWidth * 14), (int) Math.round(componentHeight * 11));
 
         weeksIntervalJCheckBox.setSize(21,
-                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10) - 2);
-        weeksIntervalJCheckBox.setLocation((int) Math.round(componentWidth * 21) + 1, (int) Math.round(componentHeight * 10) + 1);
+                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11) - 2);
+        weeksIntervalJCheckBox.setLocation((int) Math.round(componentWidth * 21) + 1, (int) Math.round(componentHeight * 11) + 1);
         weeksIntervalJLabel.setSize((int) Math.round(componentWidth * 35) - (int) Math.round(componentWidth * 21),
-                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
-        weeksIntervalJLabel.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight * 10));
+                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11));
+        weeksIntervalJLabel.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight * 11));
         weeksIntervalJTextField.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 35),
-                (int) Math.round(componentHeight * 11) - (int) Math.round(componentHeight * 10));
-        weeksIntervalJTextField.setLocation((int) Math.round(componentWidth * 35), (int) Math.round(componentHeight * 10));
+                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11));
+        weeksIntervalJTextField.setLocation((int) Math.round(componentWidth * 35), (int) Math.round(componentHeight * 11));
 
         defaultColoursJButton.setSize((int) Math.round(componentWidth * 21),
-                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11));
-        defaultColoursJButton.setLocation(0, (int) Math.round(componentHeight * 11));
+                (int) Math.round(componentHeight * 13) - (int) Math.round(componentHeight * 12));
+        defaultColoursJButton.setLocation(0, (int) Math.round(componentHeight * 12));
         randomColoursJButton.setSize((int) Math.round(componentWidth * 42) - (int) Math.round(componentWidth * 21),
-                (int) Math.round(componentHeight * 12) - (int) Math.round(componentHeight * 11));
-        randomColoursJButton.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight * 11));
+                (int) Math.round(componentHeight * 13) - (int) Math.round(componentHeight * 12));
+        randomColoursJButton.setLocation((int) Math.round(componentWidth * 21), (int) Math.round(componentHeight * 12));
 
     }
 
@@ -381,37 +617,69 @@ public class Calendar extends JFrame {
 
     static void clearCalendarBoxesContents(String periodToClear) {
 
-        int earliestMonthToClear = 0;
-        int latestMonthToClear = 0;
-        int earliestYearToClear = 0;
-        int latestYearToClear = 0;
-        if (periodToClear.equals("MONTH")) {
-            earliestMonthToClear = monthJComboBox.getSelectedIndex();
-            latestMonthToClear = monthJComboBox.getSelectedIndex();
-            earliestYearToClear = yearJComboBox.getSelectedIndex();
-            latestYearToClear = yearJComboBox.getSelectedIndex();
-        }
-        if (periodToClear.equals("YEAR")) {
-            earliestMonthToClear = 0;
-            latestMonthToClear = 11;
-            earliestYearToClear = yearJComboBox.getSelectedIndex();
-            latestYearToClear = yearJComboBox.getSelectedIndex();
-        }
-        if (periodToClear.equals("ALL")) {
-            earliestMonthToClear = 0;
-            latestMonthToClear = 11;
-            earliestYearToClear = 0;
-            latestYearToClear = 20;
-        }
+        if (periodToClear.equals("WEEK")) {
 
-        for (int i = earliestYearToClear; i <= latestYearToClear; i++) {
-            for (int j = earliestMonthToClear; j <= latestMonthToClear; j++) {
-                for (int k = 0; k < 6; k++) {
-                    for (int l = 0; l < 7; l++) {
-                        calendarBoxesContents[i][j][k][l][1] = "";
+            Date date = null;
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            try {
+                date = simpleDateFormat.parse(((String) weekJComboBox.getSelectedItem()).substring(0, 10));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            GregorianCalendar weekStart = new GregorianCalendar();
+            weekStart.setTime(date);
+            try {
+                date = simpleDateFormat.parse(((String) weekJComboBox.getSelectedItem()).substring(13, 23));
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+            GregorianCalendar weekEnd = new GregorianCalendar();
+            weekEnd.setTime(date);
+            calendarBoxesContents
+                    [weekStart.get(GregorianCalendar.YEAR) - 2008]
+                    [weekStart.get(GregorianCalendar.MONTH)]
+                    [weekStart.get(GregorianCalendar.DAY_OF_MONTH) - 1] = "";
+            while (!weekStart.equals(weekEnd)) {
+                weekStart.add(GregorianCalendar.DAY_OF_MONTH, 1);
+                calendarBoxesContents
+                        [weekStart.get(GregorianCalendar.YEAR) - 2008]
+                        [weekStart.get(GregorianCalendar.MONTH)]
+                        [weekStart.get(GregorianCalendar.DAY_OF_MONTH) - 1] = "";
+            }
+
+        } else {
+
+            int earliestMonthToClear = 0;
+            int latestMonthToClear = 0;
+            int earliestYearToClear = 0;
+            int latestYearToClear = 0;
+            if (periodToClear.equals("MONTH")) {
+                earliestMonthToClear = monthJComboBox.getSelectedIndex();
+                latestMonthToClear = monthJComboBox.getSelectedIndex();
+                earliestYearToClear = yearJComboBox.getSelectedIndex();
+                latestYearToClear = yearJComboBox.getSelectedIndex();
+            }
+            if (periodToClear.equals("YEAR")) {
+                earliestMonthToClear = 0;
+                latestMonthToClear = 11;
+                earliestYearToClear = yearJComboBox.getSelectedIndex();
+                latestYearToClear = yearJComboBox.getSelectedIndex();
+            }
+            if (periodToClear.equals("ALL")) {
+                earliestMonthToClear = 0;
+                latestMonthToClear = 11;
+                earliestYearToClear = 0;
+                latestYearToClear = 20;
+            }
+
+            for (int i = earliestYearToClear; i <= latestYearToClear; i++) {
+                for (int j = earliestMonthToClear; j <= latestMonthToClear; j++) {
+                    for (int k = 0; k < 31; k++) {
+                        calendarBoxesContents[i][j][k] = "";
                     }
                 }
             }
+
         }
 
     }
@@ -424,63 +692,68 @@ public class Calendar extends JFrame {
 
     static void copyCalendarBoxContents() {
 
-        GregorianCalendar gregorianCalendar = new GregorianCalendar(
-                (int) yearJComboBox.getSelectedItem(),
-                monthJComboBox.getSelectedIndex(),
-                (int) dayToCopyJComboBox.getSelectedItem());
-        gregorianCalendar.setMinimalDaysInFirstWeek(1);
-        int dayToCopyFrom = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7;
-        int weekToCopyFrom = gregorianCalendar.get(GregorianCalendar.WEEK_OF_MONTH) - 1;
-        int monthToCopyFrom = gregorianCalendar.get(GregorianCalendar.MONTH);
-        int yearToCopyFrom = yearJComboBox.getSelectedIndex();
-
         Integer copies = null;
         try {
             copies = Integer.parseInt(copiesJTextField.getText());
-        } catch(NumberFormatException e) {
-        } catch(NullPointerException e) {
+        } catch (NumberFormatException e) {
+        } catch (NullPointerException e) {
         }
         Integer weeksInterval = null;
         try {
             weeksInterval = Integer.parseInt(weeksIntervalJTextField.getText());
-        } catch(NumberFormatException e) {
-        } catch(NullPointerException e) {
+        } catch (NumberFormatException e) {
+        } catch (NullPointerException e) {
         }
 
-        YEAR_LOOP:
-        for (int i = yearToCopyFrom; i < 21; i++) {
-            int earliestMonthToCopyFrom = i == yearToCopyFrom ? monthToCopyFrom : 0;
-            for (int j = earliestMonthToCopyFrom; j < 12; j++) {
-                int earliestWeekToCopyFrom = i == yearToCopyFrom && j == earliestMonthToCopyFrom ? weekToCopyFrom + 1 : 0;
-                for (int k = earliestWeekToCopyFrom; k < 6; k++) {
-                    YearMonth yearMonth = YearMonth.of(2008 + i, j + 1);
-                    int lengthOfMonth = yearMonth.lengthOfMonth();
-                    gregorianCalendar = new GregorianCalendar(2008 + i, j, 1);
-                    int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
-                    int date = dayToCopyFrom + k * 7 - offset;
-                    if (date >= 1 && date <= lengthOfMonth) {
-
-                        if (weeksIntervalJCheckBox.isSelected() && weeksInterval != null) {
-                            weeksInterval--;
-                            if (weeksInterval >= 1) {
-                                continue;
-                            }
-                            weeksInterval = Integer.parseInt(weeksIntervalJTextField.getText());
-                        }
-
-                        if (copiesJCheckBox.isSelected() && copies != null) {
-                            if (copies <= 0) {
-                                break YEAR_LOOP;
-                            }
-                            copies--;
-                        }
-
-                        calendarBoxesContents[i][j][k][dayToCopyFrom][1]
-                                = calendarBoxesContents[yearToCopyFrom][monthToCopyFrom][weekToCopyFrom][dayToCopyFrom][1];
-
-                    }
-                }
+        GregorianCalendar originalGregorianCalendar = null;
+        if (viewJComboBox.getSelectedItem().equals("MONTH VIEW")) {
+            originalGregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), (int) dayToCopyJComboBox.getSelectedItem());
+        }
+        if (viewJComboBox.getSelectedItem().equals("WEEK VIEW")) {
+            Date date = null;
+            SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+            try {
+                date = simpleDateFormat.parse(((String) weekJComboBox.getSelectedItem()).substring(0, 10));
+            } catch (ParseException e) {
+                e.printStackTrace();
             }
+            originalGregorianCalendar = new GregorianCalendar();
+            originalGregorianCalendar.setTime(date);
+            while (originalGregorianCalendar.get(GregorianCalendar.DAY_OF_MONTH) != (int) dayToCopyJComboBox.getSelectedItem()) {
+                originalGregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, 1);
+            }
+        }
+
+        GregorianCalendar copyGregorianCalendar = (GregorianCalendar) originalGregorianCalendar.clone();
+        if (weeksIntervalJCheckBox.isSelected() && weeksInterval != null) {
+            copyGregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, 7 * weeksInterval);
+        } else {
+            copyGregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, 7);
+        }
+        while (copyGregorianCalendar.get(GregorianCalendar.YEAR) < 2008 + 20 + 1) {
+
+            if (copiesJCheckBox.isSelected() && copies != null) {
+                if (copies <= 0) {
+                    break;
+                }
+                copies--;
+            }
+
+            calendarBoxesContents
+                    [copyGregorianCalendar.get(GregorianCalendar.YEAR) - 2008]
+                    [copyGregorianCalendar.get(GregorianCalendar.MONTH)]
+                    [copyGregorianCalendar.get(GregorianCalendar.DAY_OF_MONTH) - 1]
+                    = calendarBoxesContents
+                    [originalGregorianCalendar.get(GregorianCalendar.YEAR) - 2008]
+                    [originalGregorianCalendar.get(GregorianCalendar.MONTH)]
+                    [originalGregorianCalendar.get(GregorianCalendar.DAY_OF_MONTH) - 1];
+
+            if (weeksIntervalJCheckBox.isSelected() && weeksInterval != null) {
+                copyGregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, 7 * weeksInterval);
+            } else {
+                copyGregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, 7);
+            }
+
         }
 
     }
@@ -525,36 +798,70 @@ public class Calendar extends JFrame {
 
     static void applyComponentsColours() {
 
-        monthJComboBox.setBackground(componentsColours[2]);
-        yearJComboBox.setBackground(componentsColours[2]);
-        for (int i = 0; i < 7; i++) {
-            headerJTextAreas[i].setBackground(componentsColours[1]);
-        }
-        YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
-        int lengthOfMonth = yearMonth.lengthOfMonth();
-        GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
-        int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
-        for (int i = 0; i < 7; i++) {
-            for (int j = 0; j < 6; j++) {
-                int date = i + j * 7 - offset;
-                if (date >= 1 && date <= lengthOfMonth) {
-                    calendarBoxesJTextAreas[j][i][0].setBackground(componentsColours[3]);
-                    calendarBoxesJTextAreas[j][i][1].setBackground(componentsColours[3]);
-                } else {
-                    calendarBoxesJTextAreas[j][i][0].setBackground(componentsColours[0]);
-                    calendarBoxesJTextAreas[j][i][1].setBackground(componentsColours[0]);
+        if (listenersActive) {
+            listenersActive = false;
+
+            monthJComboBox.setBackground(componentsColours[2]);
+            yearJComboBox.setBackground(componentsColours[2]);
+            for (int i = 0; i < 7; i++) {
+                headerJTextAreas[i].setBackground(componentsColours[1]);
+            }
+
+            if (viewJComboBox.getSelectedItem().equals("MONTH VIEW")) {
+                YearMonth yearMonth = YearMonth.of((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex() + 1);
+                int lengthOfMonth = yearMonth.lengthOfMonth();
+                GregorianCalendar gregorianCalendar = new GregorianCalendar((int) yearJComboBox.getSelectedItem(), monthJComboBox.getSelectedIndex(), 1);
+                int offset = (gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7 - 1;
+                for (int i = 0; i < 7; i++) {
+                    for (int j = 0; j < 6; j++) {
+                        int date = i + j * 7 - offset;
+                        if (date >= 1 && date <= lengthOfMonth) {
+                            monthViewCalendarBoxesJTextAreas[j][i][0].setBackground(componentsColours[3]);
+                            monthViewCalendarBoxesJTextAreas[j][i][1].setBackground(componentsColours[3]);
+                        } else {
+                            monthViewCalendarBoxesJTextAreas[j][i][0].setBackground(componentsColours[0]);
+                            monthViewCalendarBoxesJTextAreas[j][i][1].setBackground(componentsColours[0]);
+                        }
+                    }
                 }
             }
-        }
-        dayToCopyJComboBox.setBackground(componentsColours[2]);
-        copiesJCheckBox.setBackground(componentsColours[2]);
-        copiesJLabel.setBackground(componentsColours[2]);
-        copiesJTextField.setBackground(componentsColours[3]);
-        weeksIntervalJCheckBox.setBackground(componentsColours[2]);
-        weeksIntervalJLabel.setBackground(componentsColours[2]);
-        weeksIntervalJTextField.setBackground(componentsColours[3]);
 
-        calendar.repaint();
+            if (viewJComboBox.getSelectedItem().equals("WEEK VIEW")) {
+                Date date = null;
+                SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd/MM/yyyy");
+                try {
+                    date = simpleDateFormat.parse(((String) weekJComboBox.getSelectedItem()).substring(0, 10));
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+                GregorianCalendar gregorianCalendar = new GregorianCalendar();
+                gregorianCalendar.setTime(date);
+                int year = gregorianCalendar.get(GregorianCalendar.YEAR);
+                gregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, -((gregorianCalendar.get(GregorianCalendar.DAY_OF_WEEK) + 5) % 7));
+                for (int i = 0; i < 7; i++) {
+                    if (gregorianCalendar.get(GregorianCalendar.YEAR) == year) {
+                        weekViewCalendarBoxesJTextAreas[i][0].setBackground(componentsColours[3]);
+                        weekViewCalendarBoxesJTextAreas[i][1].setBackground(componentsColours[3]);
+                    } else {
+                        weekViewCalendarBoxesJTextAreas[i][0].setBackground(componentsColours[0]);
+                        weekViewCalendarBoxesJTextAreas[i][1].setBackground(componentsColours[0]);
+                    }
+                    gregorianCalendar.add(GregorianCalendar.DAY_OF_MONTH, 1);
+                }
+            }
+
+            dayToCopyJComboBox.setBackground(componentsColours[2]);
+            copiesJCheckBox.setBackground(componentsColours[2]);
+            copiesJLabel.setBackground(componentsColours[2]);
+            copiesJTextField.setBackground(componentsColours[3]);
+            weeksIntervalJCheckBox.setBackground(componentsColours[2]);
+            weeksIntervalJLabel.setBackground(componentsColours[2]);
+            weeksIntervalJTextField.setBackground(componentsColours[3]);
+
+            calendar.repaint();
+
+            listenersActive = true;
+        }
 
     }
 

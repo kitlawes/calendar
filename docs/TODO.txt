@@ -16,4 +16,5 @@ DONE - Allow the user to specify an upper bound on the number of calendar boxes 
 DONE - Allow the user to specify an interval as an number of weeks between calendar boxes to copy to
 DONE - Add controls to change the colour scheme of the GUI
 DONE - Keep the colour scheme when the application is closed and reopened
-- Implement a view for showing just one week instead of a whole month and add controls for switching between the views
+DONE - Implement a view for showing just one week instead of a whole month and add controls for switching between the views
+- Keep the settings for all controls when the application is closed and reopened

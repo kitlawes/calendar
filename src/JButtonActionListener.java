@@ -5,6 +5,9 @@ public class JButtonActionListener implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         switch (e.getActionCommand()) {
+            case "CLEAR WEEK":
+                Calendar.clearCalendarBoxes("WEEK");
+                break;
             case "CLEAR MONTH":
                 Calendar.clearCalendarBoxes("MONTH");
                 break;
