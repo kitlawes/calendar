@@ -801,6 +801,8 @@ public class Calendar extends JFrame {
         if (listenersActive) {
             listenersActive = false;
 
+            viewJComboBox.setBackground(componentsColours[2]);
+            weekJComboBox.setBackground(componentsColours[2]);
             monthJComboBox.setBackground(componentsColours[2]);
             yearJComboBox.setBackground(componentsColours[2]);
             for (int i = 0; i < 7; i++) {
